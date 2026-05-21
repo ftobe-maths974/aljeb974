@@ -61,6 +61,11 @@ export const en: Messages = {
     restart: "Replay",
   },
 
+  solution: {
+    title: "You found it!",
+    confirm: "See my stars ✨",
+  },
+
   fx: {
     zeroNothing: "Zero is nothing!",
     oneNoChange: "One changes nothing!",

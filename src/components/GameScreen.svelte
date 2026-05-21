@@ -10,6 +10,7 @@
   import LevelIntro from "./LevelIntro.svelte";
   import PuffOverlay from "./PuffOverlay.svelte";
   import Spotlight from "./Spotlight.svelte";
+  import Solution from "./Solution.svelte";
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
 
@@ -104,6 +105,10 @@
         <span>{t().pending.message}</span>
         <button class="cancel" onclick={() => game.cancelPending()}>{t().pending.cancel}</button>
       </div>
+    {/if}
+
+    {#if game.solved && game.state.rhs.length > 0 && !game.victoryReady}
+      <Solution />
     {/if}
 
     {#if game.victoryReady}

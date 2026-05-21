@@ -66,6 +66,11 @@ export const fr = {
     restart: "Refaire",
   },
 
+  solution: {
+    title: "Tu as trouvé !",
+    confirm: "Voir mes étoiles ✨",
+  },
+
   fx: {
     zeroNothing: "Zéro c'est rien !",
     oneNoChange: "Un, ça change rien !",

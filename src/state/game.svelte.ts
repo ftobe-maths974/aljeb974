@@ -102,9 +102,11 @@ class GameStore {
   }
 
   /**
-   * Met à jour l'état et déclenche le compte à rebours d'affichage de la
-   * victoire si l'opération vient de résoudre le niveau. Toutes les mutations
-   * de `this.state` passent par ici.
+   * Met à jour l'état et gère la transition vers la victoire :
+   *  - Niveaux sans rhs (1-1 à 1-4)   : victoire auto après le délai vapeur.
+   *  - Niveaux avec rhs (1-5 et +)    : on affiche d'abord « x = … » et on
+   *                                      attend la validation explicite de
+   *                                      l'élève (game.confirmVictory()).
    */
   private applyState(newState: GameState) {
     const wasSolved = this.state ? isSolved(this.state) : false;
@@ -112,10 +114,18 @@ class GameStore {
     if (!wasSolved && isSolved(newState)) {
       if (this.victoryTimer) clearTimeout(this.victoryTimer);
       this.victoryReady = false;
-      this.victoryTimer = setTimeout(() => {
-        this.victoryReady = true;
-      }, GameStore.VICTORY_DELAY_MS);
+      if (newState.rhs.length === 0) {
+        this.victoryTimer = setTimeout(() => {
+          this.victoryReady = true;
+        }, GameStore.VICTORY_DELAY_MS);
+      }
+      // Sinon : on n'arme pas de timer ; l'UI affiche la solution + bouton Valider.
     }
+  }
+
+  /** Appelé par l'UI pour passer de l'écran « x = … » à l'overlay de récompenses. */
+  confirmVictory() {
+    this.victoryReady = true;
   }
 
   /** Re-lance le niveau courant. */
