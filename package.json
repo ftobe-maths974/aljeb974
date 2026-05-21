@@ -1,0 +1,27 @@
+{
+  "name": "aljeb974",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Aljeb974 — clone HTML5 pédagogique de DragonBox Algebra (Svelte 5)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "convert": "tsx migration/scripts/convert-legacy.ts",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit -p migration/tsconfig.json"
+  },
+  "dependencies": {
+    "svelte": "^5.20.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@tsconfig/svelte": "^5.0.0",
+    "@types/node": "^25.9.1",
+    "svelte-check": "^4.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}

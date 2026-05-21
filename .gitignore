@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.local
+
+# Claude Code local settings (per-user, contains permissions overrides)
+.claude/settings.local.json
+
+# Build outputs
+build/
+.vite/
+
+# Editor
+.vscode/
+.idea/
+*~

@@ -1,0 +1,66 @@
+/* Reset minimal mobile-first + thèmes */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* on est en plein écran, jamais de scroll */
+  background: #0f1722;
+  color: #f1f5f9;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  /* Anti-tap-highlight et anti-callout pour smartphone */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Variables thème */
+:root {
+  --bg: #0f1722;
+  --fg: #f1f5f9;
+  --accent: #f59e0b;
+  --side-bg: rgba(255, 255, 255, 0.05);
+  --side-border: rgba(255, 255, 255, 0.1);
+  --card-bg: #ffffff;
+  --card-fg: #0f1722;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
