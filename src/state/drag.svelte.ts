@@ -60,6 +60,21 @@ class DragStore {
   }
 }
 
+/**
+ * Avale le 1ᵉʳ click synthétique post-pointerup (sinon le browser le dispatche
+ * sur l'élément cible et fait monter le compteur de coups via onclick).
+ * Listener document-level en CAPTURE phase one-shot, auto-nettoyé après 80 ms.
+ */
+function suppressNextClick() {
+  const handler = (e: Event) => {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    document.removeEventListener("click", handler, true);
+  };
+  document.addEventListener("click", handler, true);
+  setTimeout(() => document.removeEventListener("click", handler, true), 80);
+}
+
 
 export const drag = new DragStore();
 
@@ -226,6 +241,11 @@ function beginDrag(
       drag.hoverFractionId = null;
       drag.hoverCardId = null;
       drag.hoverSide = null;
+      // Le browser dispatche un click synthétique après pointerup. Sans
+      // protection, le click se propage au composant qui appelle alors
+      // handleCardClick → recordShot, qui DOUBLE le coût du drag. On l'avale
+      // via un listener document-level en CAPTURE phase one-shot.
+      suppressNextClick();
       onEnd(ev.clientX, ev.clientY);
     }
   }
