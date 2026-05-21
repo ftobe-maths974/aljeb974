@@ -23,6 +23,8 @@ export const fr = {
     backHome: "← Accueil",
     backMenu: "← Menu",
     chapter: "Chapitre",
+    chapters: "chapitres",
+    levels: "niveaux",
     levelHeader: (chapter: number, level: number) => `Niveau ${chapter}-${level}`,
     coupsRecap: (s: number, t: number) =>
       `${s}/${t} coup${s > 1 || t > 1 ? "s" : ""}`,

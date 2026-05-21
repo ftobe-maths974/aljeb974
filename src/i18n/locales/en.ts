@@ -20,6 +20,8 @@ export const en: Messages = {
     backHome: "← Home",
     backMenu: "← Menu",
     chapter: "Chapter",
+    chapters: "chapters",
+    levels: "levels",
     levelHeader: (chapter, level) => `Level ${chapter}-${level}`,
     coupsRecap: (s, t) => `${s}/${t} move${s > 1 || t > 1 ? "s" : ""}`,
     restart: "⟲",

@@ -47,8 +47,8 @@
 
       <section class="status">
         <p>
-          <strong>{totalChapters}</strong> {t().ui.chapter.toLowerCase()}s ·
-          <strong>{totalLevels}</strong>
+          <strong>{totalChapters}</strong> {t().ui.chapters} ·
+          <strong>{totalLevels}</strong> {t().ui.levels}
         </p>
 
         <div class="cta">
