@@ -63,6 +63,7 @@ export const en: Messages = {
 
   solution: {
     title: "You found it!",
+    titleMessy: "You found it… but you could have simplified more 🙁",
     confirm: "See my stars ✨",
   },
 

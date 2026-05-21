@@ -68,6 +68,7 @@ export const fr = {
 
   solution: {
     title: "Tu as trouvé !",
+    titleMessy: "Tu as trouvé… mais tu pouvais encore simplifier 🙁",
     confirm: "Voir mes étoiles ✨",
   },
 

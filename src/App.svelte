@@ -50,11 +50,6 @@
           <strong>{totalChapters}</strong> {t().ui.chapter.toLowerCase()}s ·
           <strong>{totalLevels}</strong>
         </p>
-        <p class="badges">
-          <span class="badge">{t().ui.badges.dsl}</span>
-          <span class="badge">{t().ui.badges.engine}</span>
-          <span class="badge">{t().ui.badges.tests}</span>
-        </p>
 
         <div class="cta">
           <button class="primary" onclick={() => startLevel(1, 1)}>{t().ui.playFirstLevel}</button>
@@ -139,22 +134,6 @@
   }
   .status {
     margin: auto 0;
-  }
-  .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-    margin: 1rem 0;
-  }
-  .badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    color: var(--accent);
-    background: rgba(245, 158, 11, 0.05);
   }
   .cta {
     display: flex;

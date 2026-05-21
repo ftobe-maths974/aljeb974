@@ -7,7 +7,7 @@
    * récompenses (game.confirmVictory).
    */
   import { game } from "../state/game.svelte.ts";
-  import type { Atom, CardInstance, FractionInstance } from "../lib/engine/index.ts";
+  import { countBeurks, type Atom, type CardInstance, type FractionInstance } from "../lib/engine/index.ts";
   import { t } from "../i18n/store.svelte.ts";
 
   /** Renvoie le côté qui CONTIENT la valeur de x (PAS le côté où x est isolé). */
@@ -26,6 +26,8 @@
   }
 
   const valueSide = $derived(findValueSide() ?? []);
+  /** True ssi la valeur de x contient des simplifications oubliées. */
+  const messy = $derived(game.state ? countBeurks(game.state) > 0 : false);
 
   function atomLabel(a: Atom): string {
     const prefix = a.sign === -1 ? "−" : "";
@@ -41,7 +43,7 @@
 </script>
 
 <div class="solution" role="dialog" aria-live="polite">
-  <p class="title">{t().solution.title}</p>
+  <p class="title" class:messy>{messy ? t().solution.titleMessy : t().solution.title}</p>
   <div class="equation">
     <span class="x">x</span>
     <span class="equals">=</span>
@@ -96,6 +98,13 @@
     color: var(--accent);
     font-weight: 700;
     letter-spacing: 0.02em;
+  }
+  .title.messy {
+    /* Couleur un peu plus pâle pour le ton « bof » de la phrase. */
+    color: #cbd5e1;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 0.95rem;
   }
   .equation {
     display: inline-flex;
