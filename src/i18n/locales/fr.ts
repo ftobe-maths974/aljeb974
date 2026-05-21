@@ -75,7 +75,7 @@ export const fr = {
   keyLevels: {
     "1-1":  { title: "Le zéro",            hint: "Le zéro, c'est rien du tout. Touche-le, il s'envole en fumée !" },
     "1-3":  { title: "Les contraires",     hint: "Quand un truc rencontre son contraire, ils s'annulent et il reste… zéro !" },
-    "1-5":  { title: "La balance",         hint: "Les deux côtés du = pèsent pareil, comme une balance. Et le zéro, ça ne pèse rien du tout !" },
+    "1-5":  { title: "La balance Équation", hint: "Le = est comme une balance : les plateaux sont en équilibre. Le but du jeu : peser x !" },
     "1-9":  { title: "La pioche",          hint: "Glisse une carte de la pioche pour la poser. Mais attention : ajoute-la sur les DEUX côtés pour garder l'équilibre." },
     "1-16": { title: "Changer le signe",   hint: "Touche une carte de la pioche pour changer son signe. Plus devient moins, et moins devient plus !" },
     "2-1":  { title: "Les fractions",      hint: "Quand la même chose est en haut et en bas d'une fraction, glisse-les l'une sur l'autre : elles se transforment en 1 !" },

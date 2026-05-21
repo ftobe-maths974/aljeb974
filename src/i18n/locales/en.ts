@@ -70,7 +70,7 @@ export const en: Messages = {
   keyLevels: {
     "1-1":  { title: "Zero",          hint: "Zero is nothing. Touch it, it puffs away!" },
     "1-3":  { title: "Opposites",     hint: "When something meets its opposite, they cancel and leave… zero!" },
-    "1-5":  { title: "The balance",   hint: "Both sides of = weigh the same, like a scale. And zero weighs nothing at all!" },
+    "1-5":  { title: "The balance equation", hint: "= is like a scale: both pans are in balance. Your goal: weigh x!" },
     "1-9":  { title: "The deck",      hint: "Drag a deck card to drop it. But careful: add it on BOTH sides to keep the balance." },
     "1-16": { title: "Flip the sign", hint: "Tap a deck card to flip its sign. Plus becomes minus, minus becomes plus!" },
     "2-1":  { title: "Fractions",     hint: "When the same thing is at the top and bottom of a fraction, drag them onto each other: they turn into 1!" },

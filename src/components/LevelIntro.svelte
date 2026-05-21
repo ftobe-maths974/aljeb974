@@ -12,7 +12,6 @@
 
   let visible = $state(false);
   let current = $state<KeyLevel | null>(null);
-  let timer: ReturnType<typeof setTimeout> | null = null;
   let onceHandler: ((e: Event) => void) | null = null;
 
   const localized = $derived.by(() => {
@@ -23,16 +22,14 @@
 
   function dismiss() {
     visible = false;
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     if (onceHandler) {
       window.removeEventListener("pointerdown", onceHandler);
       onceHandler = null;
     }
   }
 
+  // L'explication persiste jusqu'au premier geste du joueur — comportement
+  // équivalent aux astuces du legacy DragonBox-like.
   $effect(() => {
     const id = `${game.chapter}-${game.level}`;
     void game.state;
@@ -42,13 +39,13 @@
       current = lvl;
       setTimeout(() => {
         visible = true;
-        timer = setTimeout(dismiss, 6000);
         onceHandler = () => dismiss();
+        // léger délai pour ne pas attraper le clic « entrer dans le niveau »
         setTimeout(() => {
           if (onceHandler) {
             window.addEventListener("pointerdown", onceHandler, { once: true, passive: true });
           }
-        }, 200);
+        }, 300);
       }, 150);
     }
   });
