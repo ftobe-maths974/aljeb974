@@ -19,15 +19,18 @@ import {
   canCancelOpposites,
   canMoveAcross,
   canReverseInPioche,
+  canSimplifyFraction,
   capabilitiesFor,
   completePiocheDrop,
   deleteOne,
   deleteZero,
   initialState,
   isSolved,
+  locateCard,
   locateFraction,
   moveAcross,
   reverseInPioche,
+  simplifyFraction,
   stars,
   startPiocheDrop,
   type Capabilities,
@@ -252,6 +255,25 @@ class GameStore {
     }
 
     return false;
+  }
+
+  /**
+   * Drag carte → carte : simplification num/dén équivalents au sein d'une
+   * même fraction. Le numérateur cible devient 1, la carte de dénominateur
+   * disparaît. Pouf + slogan.
+   */
+  tryCardDrop(sourceCardId: string, targetCardId: string | null): boolean {
+    if (!this.state) return false;
+    if (this.state.pending) {
+      this.flashAlert();
+      return false;
+    }
+    if (!targetCardId) return false;
+    if (!canSimplifyFraction(this.state, sourceCardId, targetCardId)) return false;
+    // Pouf à l'endroit de la carte cible (qui devient « 1 »).
+    fx.spawnPuffOnCard(targetCardId, t().fx.simplifyFraction);
+    this.applyState(simplifyFraction(this.state, sourceCardId, targetCardId));
+    return true;
   }
 }
 

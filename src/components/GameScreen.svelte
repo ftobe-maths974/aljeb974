@@ -22,6 +22,10 @@
     game.tryDrop(sourceFractionId, target);
   }
 
+  function handleCardDrop(sourceCardId: string, targetCardId: string | null) {
+    game.tryCardDrop(sourceCardId, targetCardId);
+  }
+
   // Au clic sur une carte : tenter une suppression de 0 ou 1 selon le contexte.
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
   function handleCardClick(cardId: string) {
@@ -77,10 +81,10 @@
 
     <main class="play-area">
       <div class="balance-group">
-        <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} />
+        <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
         {#if game.state.rhs.length > 0}
           <span class="equals">=</span>
-          <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} />
+          <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
         {/if}
       </div>
     </main>

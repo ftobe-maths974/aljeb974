@@ -11,11 +11,13 @@
     name,
     onCardClick,
     onDrop,
+    onCardDrop,
   }: {
     fractions: FractionInstance[];
     name: SideName;
     onCardClick?: (cardId: string) => void;
     onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs" }) => void;
+    onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
 
   const isHoveredSide = $derived(
@@ -71,7 +73,7 @@
     {#if i > 0 && name !== "pioche"}
       <span class="plus" aria-hidden="true">+</span>
     {/if}
-    <Fraction {fraction} {onCardClick} {onDrop} />
+    <Fraction {fraction} {onCardClick} {onDrop} {onCardDrop} />
   {/each}
   {#if pendingTarget}
     {#if fractions.length > 0}

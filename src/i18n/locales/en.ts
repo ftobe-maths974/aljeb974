@@ -72,6 +72,7 @@ export const en: Messages = {
     oppositesCancel: "Opposites cancel out!",
     balanceRestored: "Balance restored!",
     takeOpposite: "I want the opposite!",
+    simplifyFraction: "Same up, same down: that's 1!",
   },
 
   keyLevels: {

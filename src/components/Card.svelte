@@ -1,14 +1,28 @@
 <script lang="ts">
   import type { Atom, CardInstance } from "../lib/engine/index.ts";
   import { game } from "../state/game.svelte.ts";
+  import { drag, draggableCard } from "../state/drag.svelte.ts";
 
   let {
     card,
     onclick,
+    /** Si défini, active le drag de carte (utilisé pour cartes du dénominateur). */
+    parentFractionId,
+    onCardDrop,
   }: {
     card: CardInstance;
     onclick?: (cardId: string) => void;
+    parentFractionId?: string;
+    onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
+
+  const isCardDragSource = $derived(parentFractionId !== undefined);
+  const isCardHovered = $derived(
+    drag.isCardDrag() && drag.hoverCardId === card.id,
+  );
+  const isBeingDragged = $derived(
+    drag.state?.kind === "card" && drag.state.cardId === card.id,
+  );
 
   const text = $derived(displayText(card.atom));
   const kind = $derived(card.atom.kind);
@@ -60,11 +74,22 @@
   class:literal={kind === "literal"}
   class:symbol={kind === "symbol"}
   class:neg={isNeg}
+  class:card-hovered={isCardHovered}
+  class:card-dragging={isBeingDragged}
   data-card-id={card.id}
   data-card-value={dataValue}
   onclick={handle}
   onkeydown={handle}
   aria-label={text}
+  use:draggableCard={
+    isCardDragSource
+      ? {
+          cardId: card.id,
+          parentFractionId: parentFractionId!,
+          onDrop: (targetCardId) => onCardDrop?.(card.id, targetCardId),
+        }
+      : null
+  }
 >
   <span class="value">{text}</span>
   {#if showSpotlight}
@@ -161,5 +186,15 @@
   }
   .card.neg.x {
     background: linear-gradient(135deg, #ea580c, #9a3412);
+  }
+
+  /* Highlight quand la carte est cible d'un drag-carte (simplification) */
+  .card.card-hovered {
+    box-shadow: 0 0 0 3px var(--accent), 0 6px 14px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+  }
+  /* La carte qui est draguée s'estompe sur place */
+  .card.card-dragging {
+    opacity: 0.25;
   }
 </style>

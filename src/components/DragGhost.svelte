@@ -1,15 +1,27 @@
 <script lang="ts">
   import { drag } from "../state/drag.svelte.ts";
   import { game } from "../state/game.svelte.ts";
-  import { locateFraction } from "../lib/engine/index.ts";
+  import { locateCard, locateFraction } from "../lib/engine/index.ts";
   import Fraction from "./Fraction.svelte";
+  import Card from "./Card.svelte";
 
-  // Récupère la fraction en cours de drag (depuis l'état de jeu).
+  // Fraction ou carte en cours de drag (selon le kind du state).
   const fraction = $derived.by(() => {
-    if (!drag.state || !game.state) return null;
+    if (drag.state?.kind !== "fraction" || !game.state) return null;
     const loc = locateFraction(game.state, drag.state.fractionId);
     if (!loc) return null;
     return game.state[loc.side][loc.fractionIdx] ?? null;
+  });
+
+  const card = $derived.by(() => {
+    if (drag.state?.kind !== "card" || !game.state) return null;
+    const loc = locateCard(game.state, drag.state.cardId);
+    if (!loc) return null;
+    const list =
+      loc.where === "numerator"
+        ? game.state[loc.side][loc.fractionIdx]!.numerator
+        : game.state[loc.side][loc.fractionIdx]!.denominator ?? [];
+    return list[loc.cardIdx] ?? null;
   });
 
   const transform = $derived(
@@ -19,9 +31,13 @@
   );
 </script>
 
-{#if drag.state && fraction}
+{#if drag.state && drag.state.kind === "fraction" && fraction}
   <div class="ghost" style="transform: {transform}; width: {drag.state.width}px; height: {drag.state.height}px;">
     <Fraction {fraction} />
+  </div>
+{:else if drag.state && drag.state.kind === "card" && card}
+  <div class="ghost" style="transform: {transform}; width: {drag.state.width}px; height: {drag.state.height}px;">
+    <Card {card} />
   </div>
 {/if}
 
@@ -36,7 +52,6 @@
     opacity: 0.92;
     filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
   }
-  /* Désactiver l'animation du x dans le ghost pour qu'il suive bien le doigt */
   .ghost :global(.fraction) {
     background: transparent !important;
     box-shadow: none !important;

@@ -7,15 +7,20 @@
     fraction,
     onCardClick,
     onDrop,
+    onCardDrop,
   }: {
     fraction: FractionInstance;
     onCardClick?: (cardId: string) => void;
     onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs" }) => void;
+    /** Callback pour un drag carte→carte (simplification num/dén). */
+    onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
 
   const hasDen = $derived(!!fraction.denominator && fraction.denominator.length > 0);
   const isHovered = $derived(drag.hoverFractionId === fraction.id && drag.isDragging());
-  const isDragging = $derived(drag.state?.fractionId === fraction.id);
+  const isDragging = $derived(
+    drag.state?.kind === "fraction" && drag.state.fractionId === fraction.id,
+  );
 </script>
 
 <div
@@ -43,7 +48,14 @@
         {#if card !== fraction.denominator![0]}
           <span class="mult-dot" aria-hidden="true">·</span>
         {/if}
-        <Card {card} onclick={onCardClick} />
+        <!-- Carte de dénominateur : draggable individuellement pour la
+             simplification num/dén (e.g. p/p → 1). -->
+        <Card
+          {card}
+          onclick={onCardClick}
+          parentFractionId={fraction.id}
+          {onCardDrop}
+        />
       {/each}
     </div>
   {/if}

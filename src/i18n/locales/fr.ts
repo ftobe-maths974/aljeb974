@@ -77,6 +77,7 @@ export const fr = {
     oppositesCancel: "Les opposés s'annulent !",
     balanceRestored: "J'équilibre la balance !",
     takeOpposite: "Je veux l'opposé !",
+    simplifyFraction: "Pareil en haut, pareil en bas : ça fait 1 !",
   },
 
   keyLevels: {
