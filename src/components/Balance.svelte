@@ -1,17 +1,13 @@
 <script lang="ts">
   /**
    * Balance — visualisation minimaliste de la balance algébrique.
-   * Apparaît dès qu'il y a un rhs (niveau 1-5+).
    *
-   * Deux plateaux horizontaux arrondis aux extrémités + un petit triangle (pivot)
-   * sous le signe =. Le composant se positionne via les rects DOM des éléments
-   * `[data-side="lhs"]`, `[data-side="rhs"]` et `.equals`.
+   * Apparaît dès qu'un rhs est présent (niveau 1-5+).
+   * Deux plateaux horizontaux arrondis + un petit triangle (pivot) sous le =.
    *
-   * Il se re-mesure :
-   *   - au montage
-   *   - sur resize de la fenêtre
-   *   - via ResizeObserver sur les sides (responsive)
-   *   - sur changement de game.state (cartes ajoutées/retirées)
+   * Quand le moteur est en `pending` (carte posée d'un seul côté), la balance
+   * penche : le plateau qui a reçu la carte descend, l'autre monte. La
+   * transition utilise une courbe d'overshoot pour un effet ressort.
    */
   import { onMount } from "svelte";
   import { game } from "../state/game.svelte.ts";
@@ -19,6 +15,24 @@
   let lhsRect = $state<DOMRect | null>(null);
   let rhsRect = $state<DOMRect | null>(null);
   let equalsRect = $state<DOMRect | null>(null);
+
+  /**
+   * Décalage vertical de chaque plateau pour simuler la bascule.
+   * - Côté qui a déjà reçu la carte (absent de remainingTargets) → +TILT (descend)
+   * - Côté qui attend encore la carte (dans remainingTargets)     → -TILT (monte)
+   * - Pas de pending                                              →   0
+   */
+  const TILT = 16;
+  const tilt = $derived.by(() => {
+    const p = game.state?.pending;
+    if (!p) return { lhs: 0, rhs: 0 };
+    const lhsHeavy = !p.remainingTargets.includes("lhs");
+    const rhsHeavy = !p.remainingTargets.includes("rhs");
+    return {
+      lhs: lhsHeavy ? TILT : rhsHeavy ? -TILT : 0,
+      rhs: rhsHeavy ? TILT : lhsHeavy ? -TILT : 0,
+    };
+  });
 
   function measure() {
     const lhs = document.querySelector<HTMLElement>('[data-side="lhs"]');
@@ -42,10 +56,8 @@
     };
   });
 
-  // Remesure quand l'état du jeu change (cartes ajoutées/retirées).
   $effect(() => {
     void game.state;
-    // léger délai pour laisser le DOM se mettre à jour
     requestAnimationFrame(measure);
   });
 </script>
@@ -58,6 +70,7 @@
       left: {lhsRect.left}px;
       top: {lhsRect.bottom + 6}px;
       width: {lhsRect.width}px;
+      transform: translateY({tilt.lhs}px);
     "
     aria-hidden="true"
   ></div>
@@ -68,10 +81,11 @@
       left: {rhsRect.left}px;
       top: {rhsRect.bottom + 6}px;
       width: {rhsRect.width}px;
+      transform: translateY({tilt.rhs}px);
     "
     aria-hidden="true"
   ></div>
-  <!-- Pivot triangulaire sous le signe = -->
+  <!-- Pivot triangulaire sous le = (fixe, ne penche pas) -->
   <div
     class="pivot"
     style="
@@ -91,6 +105,9 @@
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
     pointer-events: none;
     z-index: 0;
+    /* Courbe d'overshoot pour l'effet ressort de la bascule */
+    transition: transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
   }
   .pivot {
     position: fixed;
