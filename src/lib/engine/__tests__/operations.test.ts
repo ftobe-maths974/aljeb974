@@ -84,7 +84,8 @@ describe("cancelOpposites", () => {
     const zeroAtom = s2.lhs[3]!.numerator[0]!.atom;
     expect(zeroAtom.kind).toBe("literal");
     expect((zeroAtom as { value: number }).value).toBe(0);
-    expect(s2.shots).toBe(1);
+    // Le compteur de coups est désormais géré par la couche UI, pas le moteur.
+    expect(s2.shots).toBe(0);
   });
 
   it("refuse si les fractions sont sur des côtés différents", () => {
@@ -121,7 +122,7 @@ describe("startPiocheDrop + completePiocheDrop (block mode)", () => {
     expect(s2.lhs.length).toBe(3); // x, g, -g posé immédiatement
     expect(s2.rhs.length).toBe(1); // pas encore (rhs en attente)
     expect(s2.pioche.length).toBe(1); // toujours là tant que pending
-    expect(s2.shots).toBe(0); // pas encore incrémenté
+    expect(s2.shots).toBe(0); // shots géré par l'UI désormais
     expect(s2.pending).not.toBeNull();
     expect(s2.pending!.remainingTargets).toEqual(["rhs"]);
 
@@ -130,7 +131,7 @@ describe("startPiocheDrop + completePiocheDrop (block mode)", () => {
     expect(s3.lhs.length).toBe(3);
     expect(s3.rhs.length).toBe(2); // s, -g
     expect(s3.pioche.length).toBe(0); // consommée
-    expect(s3.shots).toBe(1); // incrémenté à la fin
+    expect(s3.shots).toBe(0); // shots géré par l'UI désormais
     expect(s3.pending).toBeNull();
   });
 

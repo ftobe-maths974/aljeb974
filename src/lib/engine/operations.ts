@@ -191,7 +191,7 @@ export function cancelOpposites(
   const tl = locateFraction(state, targetFractionId)!;
   const ids = makeIdSource(`co${state.shots + 1}_`);
 
-  const next = { ...state, shots: state.shots + 1 };
+  const next = { ...state };
   return updateSide(next, dl.side, (fs) => {
     // Étape 1 : la cible devient « 0 » (on garde son id pour la stabilité visuelle).
     const targetFrac = fs[tl.fractionIdx]!;
@@ -313,7 +313,6 @@ export function completePiocheDrop(
     const piocheLoc = locateFraction(state, state.pending.piocheFractionId);
     return {
       ...state,
-      shots: state.shots + 1,
       pending: null,
       [side]: [...state[side], clone],
       pioche:
@@ -387,7 +386,6 @@ export function moveAcross(state: GameState, fractionId: EntityId): GameState {
 
   let next = {
     ...state,
-    shots: state.shots + 1,
     [fromSide]: removeAt(state[fromSide], loc.fractionIdx),
     [toSide]: [...state[toSide], flipped],
   };
@@ -515,7 +513,7 @@ export function addLiterals(
     ...tFrac,
     numerator: [{ id: tFrac.numerator[0]!.id, atom: fromLiteral(sum) }],
   };
-  const next = { ...state, shots: state.shots + 1 };
+  const next = { ...state };
   return updateSide(next, dl.side, (fs) => {
     const removed = removeAt(fs, dl.fractionIdx);
     // l'index de la cible peut avoir bougé si on a retiré avant elle

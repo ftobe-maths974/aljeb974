@@ -108,7 +108,9 @@ describe("scenario : niveau 1-3 résolu (avec étape 0 intermédiaire)", () => {
     s = deleteZero(s, s.lhs[1]!.numerator[0]!.id);
     expect(s.lhs.length).toBe(1); // x seul
     expect(isSolved(s)).toBe(true);
-    expect(s.shots).toBe(2);
+    // Le compteur de coups est désormais incrémenté par la couche UI,
+    // pas par le moteur — donc 0 dans les scénarios programmatiques.
+    expect(s.shots).toBe(0);
     expect(stars(s)).toBe(3);
   });
 });
@@ -126,7 +128,9 @@ describe("scenario : niveau 1-5 résolu (avec rhs)", () => {
     s = deleteZero(s, s.rhs[1]!.numerator[0]!.id);       // → x
     expect(s.rhs.length).toBe(1);
     expect(isSolved(s)).toBe(true);
-    expect(s.shots).toBe(2);
+    // Le compteur de coups est désormais incrémenté par la couche UI,
+    // pas par le moteur — donc 0 dans les scénarios programmatiques.
+    expect(s.shots).toBe(0);
     expect(stars(s)).toBe(3); // 2 ≤ 4
   });
 });

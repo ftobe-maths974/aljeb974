@@ -19,10 +19,13 @@
     sourceFractionId: string,
     target: { fractionId?: string; side?: "lhs" | "rhs" },
   ) {
+    // Chaque drag&drop compte comme un coup, succès ou échec.
+    game.recordShot();
     game.tryDrop(sourceFractionId, target);
   }
 
   function handleCardDrop(sourceCardId: string, targetCardId: string | null) {
+    game.recordShot();
     game.tryCardDrop(sourceCardId, targetCardId);
   }
 
@@ -30,6 +33,8 @@
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
   function handleCardClick(cardId: string) {
     if (!game.state) return;
+    // Chaque clic compte comme un coup, succès ou échec.
+    game.recordShot();
     // En block mode, tout clic ailleurs que sur la pioche-cible = alerte.
     if (game.state.pending) {
       const loc = locateCard(game.state, cardId);

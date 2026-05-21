@@ -131,6 +131,16 @@ class GameStore {
     this.victoryReady = true;
   }
 
+  /**
+   * Incrémente le compteur de coups. À appeler par l'UI à chaque interaction
+   * (clic ou drop), qu'elle réussisse ou non — c'est le contrat utilisateur :
+   * « chaque clic est un coup, chaque drag&drop aussi ».
+   */
+  recordShot() {
+    if (!this.state) return;
+    this.state = { ...this.state, shots: this.state.shots + 1 };
+  }
+
   /** Re-lance le niveau courant. */
   restart() {
     this.loadLevel(this.chapter, this.level);
