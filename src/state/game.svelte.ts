@@ -199,8 +199,8 @@ class GameStore {
         src.side === tgt.side &&
         canCancelOpposites(this.state, sourceFractionId, target.fractionId)
       ) {
-        // Pouf à l'endroit de la fraction draguée AVANT qu'elle ne disparaisse.
-        fx.spawnPuffOnFraction(sourceFractionId);
+        // Pouf à l'endroit où le « 0 » va apparaître (la fraction cible).
+        fx.spawnPuffOnFraction(target.fractionId);
         this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
         return true;
       }
