@@ -18,6 +18,7 @@ import {
   cancelPending,
   canCancelOpposites,
   canMoveAcross,
+  canReverseInPioche,
   capabilitiesFor,
   completePiocheDrop,
   deleteOne,
@@ -26,6 +27,7 @@ import {
   isSolved,
   locateFraction,
   moveAcross,
+  reverseInPioche,
   stars,
   startPiocheDrop,
   type Capabilities,
@@ -110,6 +112,16 @@ class GameStore {
   cancelPending() {
     if (!this.state) return;
     this.state = cancelPending(this.state);
+  }
+
+  reverseInPioche(cardId: string) {
+    if (!this.state) return;
+    if (this.state.pending) {
+      this.flashAlert();
+      return;
+    }
+    if (!canReverseInPioche(this.state, cardId)) return;
+    this.state = reverseInPioche(this.state, cardId);
   }
 
   /**

@@ -87,42 +87,44 @@ describe("stars", () => {
   });
 });
 
-describe("scenario : niveau 1-3 résolu en 4 coups (cible)", () => {
-  it("3 étoiles attendues", () => {
-    // niveau 1-3 : lhs = [x, 2, -2, t, -t], shots cible = 4
-    // solution attendue : annuler (2,-2), annuler (t,-t) — déjà 2 coups
-    // mais ces deux annulations ne consomment que 2 shots, pas 4. La cible est large.
+describe("scenario : niveau 1-3 résolu (avec étape 0 intermédiaire)", () => {
+  it("3 étoiles : 2 cancelOpposites + 2 deleteZero (cible = 4)", () => {
+    // lhs = [x, 2, -2, t, -t], shots cible = 4
+    // séquence pédagogique :
+    //   1. drag 2 sur -2 → x, 0, t, -t           (shots=1)
+    //   2. clic sur le 0 → x, t, -t              (shots inchangé)
+    //   3. drag t sur -t → x, 0                  (shots=2)
+    //   4. clic sur le 0 → x                     (shots inchangé)
     let s = initialState(
       lvl({ lhs: ["x", "2", "-2", "t", "-t"], shots: 4 }),
       "1-3",
     );
-    // 1. annuler 2, -2
     s = cancelOpposites(s, s.lhs[1]!.id, s.lhs[2]!.id);
+    expect(s.lhs.length).toBe(4);
+    s = deleteZero(s, s.lhs[1]!.numerator[0]!.id);
     expect(s.lhs.length).toBe(3); // x, t, -t
-    // 2. annuler t, -t (positions 1, 2 maintenant)
     s = cancelOpposites(s, s.lhs[1]!.id, s.lhs[2]!.id);
+    expect(s.lhs.length).toBe(2); // x, 0
+    s = deleteZero(s, s.lhs[1]!.numerator[0]!.id);
     expect(s.lhs.length).toBe(1); // x seul
-    // Même sans rhs, le niveau est résolu : x est isolé sur son côté.
-    // C'est le comportement du legacy pour les premiers niveaux du chapitre 1.
     expect(isSolved(s)).toBe(true);
-    expect(s.shots).toBe(2); // sous la cible de 4 → 3 étoiles
+    expect(s.shots).toBe(2);
     expect(stars(s)).toBe(3);
   });
 });
 
 describe("scenario : niveau 1-5 résolu (avec rhs)", () => {
-  it("isolation de x à droite", () => {
+  it("isolation de x à droite (via 2 cancel + 2 deleteZero)", () => {
     // niveau 1-5 : lhs=[p], rhs=[x, g, -g, t, -t]
     let s = initialState(
       lvl({ lhs: ["p"], rhs: ["x", "g", "-g", "t", "-t"], shots: 4 }),
       "1-5",
     );
-    // annuler g, -g
-    s = cancelOpposites(s, s.rhs[1]!.id, s.rhs[2]!.id);
-    expect(s.rhs.length).toBe(3); // x, t, -t
-    // annuler t, -t (indices 1, 2)
-    s = cancelOpposites(s, s.rhs[1]!.id, s.rhs[2]!.id);
-    expect(s.rhs.length).toBe(1); // x seul
+    s = cancelOpposites(s, s.rhs[1]!.id, s.rhs[2]!.id); // g sur -g → x, 0, t, -t
+    s = deleteZero(s, s.rhs[1]!.numerator[0]!.id);       // → x, t, -t
+    s = cancelOpposites(s, s.rhs[1]!.id, s.rhs[2]!.id); // t sur -t → x, 0
+    s = deleteZero(s, s.rhs[1]!.numerator[0]!.id);       // → x
+    expect(s.rhs.length).toBe(1);
     expect(isSolved(s)).toBe(true);
     expect(s.shots).toBe(2);
     expect(stars(s)).toBe(3); // 2 ≤ 4
@@ -132,9 +134,6 @@ describe("scenario : niveau 1-5 résolu (avec rhs)", () => {
 describe("scenario : niveau 1-9 (drop depuis pioche en 2 étapes)", () => {
   it("résolution complète", () => {
     // niveau 1-9 : lhs=[x, g], rhs=[s], pioche=[-g]
-    // solution : start drop -g sur lhs → pending: rhs
-    //           complete sur rhs → lhs=[x, g, -g], rhs=[s, -g]
-    //           puis annuler g, -g sur lhs → lhs=[x], rhs=[s, -g]
     let s = initialState(
       lvl({ lhs: ["x", "g"], rhs: ["s"], pioche: ["-g"], shots: 3 }),
       "1-9",
@@ -146,7 +145,10 @@ describe("scenario : niveau 1-9 (drop depuis pioche en 2 étapes)", () => {
     expect(s.rhs.length).toBe(2); // s, -g
     expect(s.pioche.length).toBe(0);
     expect(s.pending).toBeNull();
+    // annuler g et -g du lhs → lhs = [x, 0], puis supprimer le 0 → [x]
     s = cancelOpposites(s, s.lhs[1]!.id, s.lhs[2]!.id);
+    expect(s.lhs.length).toBe(2);
+    s = deleteZero(s, s.lhs[1]!.numerator[0]!.id);
     expect(s.lhs.length).toBe(1);
     expect(isSolved(s)).toBe(true);
   });

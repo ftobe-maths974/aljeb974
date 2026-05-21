@@ -19,7 +19,8 @@ export interface KeyLevel {
 
 export const KEY_LEVELS: ReadonlyArray<KeyLevel> = [
   { id: "1-1",  title: "Le zéro",            hint: "Touche un 0 pour le faire disparaître." },
-  { id: "1-3",  title: "L'opposé",           hint: "Glisse un terme sur son opposé : ils s'annulent." },
+  { id: "1-3",  title: "L'opposé",           hint: "Glisse un terme sur son opposé : ils donnent 0." },
+  { id: "1-5",  title: "L'équation = balance", hint: "Les deux plateaux sont en équilibre. Ce que tu fais à gauche, tu dois le faire à droite." },
   { id: "1-9",  title: "La pioche",          hint: "Pose une carte sur les DEUX côtés pour garder l'équilibre." },
   { id: "1-16", title: "Inverser le signe",  hint: "Touche une carte de pioche pour changer son signe." },
   { id: "2-1",  title: "Les fractions",      hint: "Une fraction p/p vaut 1 : superpose-les pour simplifier." },

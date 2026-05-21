@@ -72,14 +72,18 @@ describe("deleteOne", () => {
 });
 
 describe("cancelOpposites", () => {
-  it("annule t et -t au même membre", () => {
+  it("produit un 0 intermédiaire + retire la fraction draguée", () => {
     // niveau 1-3 : x + 2 + (-2) + t + (-t)
     const s = initialState(lvl({ lhs: ["x", "2", "-2", "t", "-t"], shots: 4 }), "1-3");
-    const tFrac = s.lhs[3]!.id;
-    const minusTFrac = s.lhs[4]!.id;
+    const tFrac = s.lhs[3]!.id;       // dragué
+    const minusTFrac = s.lhs[4]!.id;  // cible
     expect(canCancelOpposites(s, tFrac, minusTFrac)).toBe(true);
     const s2 = cancelOpposites(s, tFrac, minusTFrac);
-    expect(s2.lhs.length).toBe(3); // x, 2, -2 restent
+    // 4 fractions restent : x, 2, -2, 0 (le -t est devenu 0, le t est consommé)
+    expect(s2.lhs.length).toBe(4);
+    const zeroAtom = s2.lhs[3]!.numerator[0]!.atom;
+    expect(zeroAtom.kind).toBe("literal");
+    expect((zeroAtom as { value: number }).value).toBe(0);
     expect(s2.shots).toBe(1);
   });
 

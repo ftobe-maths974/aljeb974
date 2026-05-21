@@ -169,6 +169,15 @@ export function canCancelOpposites(
   return atomsOpposite(dFrac.numerator[0]!.atom, tFrac.numerator[0]!.atom);
 }
 
+/**
+ * Annule deux termes opposés : `t + (-t)` devient `0` dans la fraction cible,
+ * et la fraction draguée disparaît. L'élève doit ensuite cliquer le `0`
+ * pour terminer la simplification — cette étape intermédiaire matérialise
+ * la propriété « somme d'opposés = élément neutre additif ».
+ *
+ * Cf. legacy `droppableFracAddition` ([application.coffee:874-902](../../legacy/js/application.coffee#L874-L902)) :
+ *   `get_card(carte).moveTo "0"` puis `explosion_effect` sur le draggé.
+ */
 export function cancelOpposites(
   state: GameState,
   draggedFractionId: EntityId,
@@ -180,12 +189,20 @@ export function cancelOpposites(
   }
   const dl = locateFraction(state, draggedFractionId)!;
   const tl = locateFraction(state, targetFractionId)!;
-  // retirer les deux fractions du même membre (en partant de l'index le plus grand)
-  const [a, b] = dl.fractionIdx > tl.fractionIdx
-    ? [dl.fractionIdx, tl.fractionIdx]
-    : [tl.fractionIdx, dl.fractionIdx];
+  const ids = makeIdSource(`co${state.shots + 1}_`);
+
   const next = { ...state, shots: state.shots + 1 };
-  return updateSide(next, dl.side, (fs) => removeAt(removeAt(fs, a), b));
+  return updateSide(next, dl.side, (fs) => {
+    // Étape 1 : la cible devient « 0 » (on garde son id pour la stabilité visuelle).
+    const targetFrac = fs[tl.fractionIdx]!;
+    const zeroFrac: FractionInstance = {
+      id: targetFrac.id,
+      numerator: [{ id: ids.next(), atom: fromLiteral(0) }],
+    };
+    const replaced = replaceAt(fs, tl.fractionIdx, zeroFrac);
+    // Étape 2 : la fraction draguée disparaît (son index est resté valide).
+    return removeAt(replaced, dl.fractionIdx);
+  });
 }
 
 /* ─── 4. Inversion du signe d'une carte de la pioche ─────────────────────── */

@@ -6,6 +6,7 @@
   import DragGhost from "./DragGhost.svelte";
   import FlashAlert from "./FlashAlert.svelte";
   import Astuce from "./Astuce.svelte";
+  import Balance from "./Balance.svelte";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -35,6 +36,11 @@
         ? game.state[loc.side][loc.fractionIdx]!.numerator
         : game.state[loc.side][loc.fractionIdx]!.denominator ?? [];
     const card = list[loc.cardIdx]!;
+    // Pioche + reversePower : un clic inverse le signe (niveau 1-16+).
+    if (loc.side === "pioche" && game.caps.reversePower) {
+      game.reverseInPioche(cardId);
+      return;
+    }
     if (isZero(card.atom)) {
       try {
         game.deleteZero(cardId);
@@ -64,7 +70,7 @@
     <main class="play-area">
       <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} />
       {#if game.state.rhs.length > 0}
-        <span class="equals" aria-hidden="true">=</span>
+        <span class="equals">=</span>
         <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} />
       {/if}
     </main>
@@ -73,6 +79,10 @@
       <footer class="pioche-bar">
         <Side fractions={game.state.pioche} name="pioche" onCardClick={handleCardClick} onDrop={handleDrop} />
       </footer>
+    {/if}
+
+    {#if game.state.rhs.length > 0}
+      <Balance />
     {/if}
 
     <DragGhost />
