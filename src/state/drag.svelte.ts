@@ -62,23 +62,31 @@ class DragStore {
 
 /**
  * Le browser dispatche un événement `click` synthétique après un `pointerup`,
- * même quand un drag vient d'avoir lieu. Avec setPointerCapture, ce click fire
- * sur l'élément RELÂCHÉ (la cible), pas sur l'élément source du drag — un
- * listener sur le source ne suffit donc pas.
+ * même quand un drag vient d'avoir lieu. Deux protections empilées :
  *
- * On installe à la place un listener `click` au niveau DOCUMENT en phase de
- * CAPTURE, one-shot : il intercepte le 1ᵉʳ click qui suit, peu importe la
- * cible, et l'avale (stopImmediatePropagation + preventDefault). Auto-cleanup
- * après ~80 ms si aucun click n'arrive (release dans le vide).
+ * 1. Listener `click` document-level en CAPTURE one-shot qui avale le 1ᵉʳ
+ *    click (idéal : aucun side-effect, aucun shot).
+ * 2. Timestamp `dragEndedAt` : vérifié par `justDragged()`. Les handlers du
+ *    composant Card/GameScreen peuvent l'interroger pour bailler — utile si
+ *    Svelte 5 ne respecte pas `stopImmediatePropagation` (selon comment il
+ *    branche `onclick={}` en interne).
  */
+let dragEndedAt = 0;
+const POST_DRAG_GRACE_MS = 120;
+
+export function justDragged(): boolean {
+  return performance.now() - dragEndedAt < POST_DRAG_GRACE_MS;
+}
+
 function suppressNextClick() {
+  dragEndedAt = performance.now();
   const handler = (e: Event) => {
     e.stopImmediatePropagation();
     e.preventDefault();
     document.removeEventListener("click", handler, true);
   };
   document.addEventListener("click", handler, true);
-  setTimeout(() => document.removeEventListener("click", handler, true), 80);
+  setTimeout(() => document.removeEventListener("click", handler, true), POST_DRAG_GRACE_MS);
 }
 
 export const drag = new DragStore();

@@ -12,6 +12,7 @@
   import Solution from "./Solution.svelte";
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
+  import { justDragged } from "../state/drag.svelte.ts";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -33,6 +34,8 @@
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
   function handleCardClick(cardId: string) {
     if (!game.state) return;
+    // Le click synthétique qui suit un drag ne doit pas compter comme un coup.
+    if (justDragged()) return;
     // Chaque clic compte comme un coup, succès ou échec.
     game.recordShot();
     // En block mode, tout clic ailleurs que sur la pioche-cible = alerte.
