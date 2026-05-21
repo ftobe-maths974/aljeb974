@@ -7,6 +7,7 @@
    * On laisse passer les écrans larges (tablettes/desktop) même en portrait.
    */
   import { onMount } from "svelte";
+  import { t } from "../i18n/store.svelte.ts";
 
   let isPortraitMobile = $state(false);
 
@@ -38,8 +39,8 @@
       <rect x="5" y="5" width="50" height="90" rx="8" fill="none" stroke="currentColor" stroke-width="3" />
       <circle cx="30" cy="88" r="3" fill="currentColor" />
     </svg>
-    <p class="title">Tourne ton téléphone</p>
-    <p class="sub">Aljeb974 se joue en mode paysage.</p>
+    <p class="title">{t().orientation.title}</p>
+    <p class="sub">{t().orientation.sub}</p>
   </div>
 {:else}
   {@render children()}

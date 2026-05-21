@@ -36,6 +36,7 @@ import {
 import levelsData from "../../migration/levels.json";
 import { astuce } from "./astuce.svelte.ts";
 import { fx } from "./fx.svelte.ts";
+import { t } from "../i18n/store.svelte.ts";
 
 // ─── Lookup helper ──────────────────────────────────────────────────────────
 
@@ -205,7 +206,9 @@ class GameStore {
         // finale du 0, pas à sa position pré-réalignement.
         const targetFractionId = target.fractionId;
         this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
-        requestAnimationFrame(() => fx.spawnPuffOnFraction(targetFractionId));
+        requestAnimationFrame(() =>
+          fx.spawnPuffOnFraction(targetFractionId, t().fx.oppositesCancel),
+        );
         return true;
       }
     }

@@ -8,6 +8,9 @@
 
 {#each fx.puffs as puff (puff.id)}
   <div class="puff" style="left: {puff.x}px; top: {puff.y}px;" aria-hidden="true">
+    {#if puff.slogan}
+      <span class="slogan">{puff.slogan}</span>
+    {/if}
     <span class="core"></span>
     <span class="cloud c1"></span>
     <span class="cloud c2"></span>
@@ -27,6 +30,29 @@
     height: 0;
     pointer-events: none;
     z-index: 150;
+  }
+
+  .slogan {
+    position: absolute;
+    left: 0;
+    top: -56px;
+    transform: translate(-50%, 0);
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--accent);
+    text-shadow:
+      0 0 6px rgba(0, 0, 0, 0.85),
+      0 2px 4px rgba(0, 0, 0, 0.7);
+    white-space: nowrap;
+    animation: slogan-float 1400ms ease-out forwards;
+  }
+  @keyframes slogan-float {
+    0%   { opacity: 0; transform: translate(-50%, 18px) scale(0.7); }
+    20%  { opacity: 1; transform: translate(-50%, 0)    scale(1.15); }
+    35%  {             transform: translate(-50%, -2px) scale(1);    }
+    100% { opacity: 0; transform: translate(-50%, -36px) scale(1);   }
   }
 
   /* Cœur opaque au point d'origine — court mais bien visible */

@@ -5,6 +5,7 @@
    * Cible de drop : reçoit `data-side` pour que le picker du drag store
    * trouve la bonne cible.
    */
+  import { t } from "../i18n/store.svelte.ts";
 
   let {
     side,
@@ -16,10 +17,10 @@
   } = $props();
 </script>
 
-<div class="dropzone" data-side={side} aria-label="Dépose ici la même carte">
-  <span class="hint">Dépose</span>
+<div class="dropzone" data-side={side} aria-label={`${t().drop.hintTop} ${cardSummary} ${t().drop.hintBottom}`}>
+  <span class="hint">{t().drop.hintTop}</span>
   <span class="card-shape">{cardSummary}</span>
-  <span class="hint">ici aussi</span>
+  <span class="hint">{t().drop.hintBottom}</span>
 </div>
 
 <style>

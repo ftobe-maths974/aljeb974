@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from "../i18n/store.svelte.ts";
+
   let {
     stars,
     shots,
@@ -16,19 +18,19 @@
   } = $props();
 </script>
 
-<div class="overlay" role="dialog" aria-modal="true" aria-label="Victoire">
+<div class="overlay" role="dialog" aria-modal="true" aria-label={t().victory.title}>
   <div class="card">
-    <h2>Bravo !</h2>
-    <div class="stars" aria-label="{stars} étoile(s) sur 3">
+    <h2>{t().victory.title}</h2>
+    <div class="stars" aria-label={t().victory.starsLabel(stars)}>
       {#each Array(3) as _, i}
         <span class="star" class:earned={i < stars}>★</span>
       {/each}
     </div>
-    <p class="recap">{shots} coup{shots > 1 ? "s" : ""} sur {target} cible.</p>
+    <p class="recap">{t().victory.coupsRecap(shots, target)}</p>
     <div class="actions">
-      <button onclick={onMenu}>Menu</button>
-      <button onclick={onRestart}>Refaire</button>
-      <button class="primary" onclick={onNext}>Suivant →</button>
+      <button onclick={onMenu}>{t().victory.menu}</button>
+      <button onclick={onRestart}>{t().victory.restart}</button>
+      <button class="primary" onclick={onNext}>{t().victory.next}</button>
     </div>
   </div>
 </div>

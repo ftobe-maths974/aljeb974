@@ -3,16 +3,23 @@
    * LevelIntro — bannière qui s'affiche au démarrage d'un niveau-clé,
    * avec un emoji, un titre et une phrase imagée pour l'enfant.
    *
+   * Texte localisé : récupéré via i18n.keyLevels[id].
    * Auto-dismiss après 6 s, ou au premier pointerdown du joueur.
-   * Reactivité au changement de niveau (game.chapter / game.level).
    */
   import { game } from "../state/game.svelte.ts";
   import { getKeyLevel, type KeyLevel } from "../data/key-levels.ts";
+  import { t } from "../i18n/store.svelte.ts";
 
   let visible = $state(false);
   let current = $state<KeyLevel | null>(null);
   let timer: ReturnType<typeof setTimeout> | null = null;
   let onceHandler: ((e: Event) => void) | null = null;
+
+  const localized = $derived.by(() => {
+    if (!current) return null;
+    const entry = (t().keyLevels as Record<string, { title: string; hint: string }>)[current.id];
+    return entry ?? null;
+  });
 
   function dismiss() {
     visible = false;
@@ -26,23 +33,17 @@
     }
   }
 
-  // Quand le niveau change, on tente d'afficher la bannière.
   $effect(() => {
     const id = `${game.chapter}-${game.level}`;
-    // Lecture de game.state pour réagir au loadLevel (relance même niveau).
     void game.state;
     const lvl = getKeyLevel(id);
     dismiss();
     if (lvl) {
       current = lvl;
-      // léger délai pour laisser l'astuce s'amorcer
       setTimeout(() => {
         visible = true;
         timer = setTimeout(dismiss, 6000);
-        // Le pointerdown du joueur ferme aussi la bannière (cf. legacy astuces).
         onceHandler = () => dismiss();
-        // On laisse passer un tick avant d'écouter pour éviter de fermer
-        // immédiatement à cause de l'événement de loadLevel.
         setTimeout(() => {
           if (onceHandler) {
             window.addEventListener("pointerdown", onceHandler, { once: true, passive: true });
@@ -53,12 +54,12 @@
   });
 </script>
 
-{#if visible && current}
+{#if visible && current && localized}
   <div class="intro" role="dialog" aria-live="polite">
     <span class="emoji" aria-hidden="true">{current.emoji}</span>
     <div class="text">
-      <strong>{current.title}</strong>
-      <span>{current.hint}</span>
+      <strong>{localized.title}</strong>
+      <span>{localized.hint}</span>
     </div>
     <button class="close" onclick={dismiss} aria-label="Fermer">✕</button>
   </div>

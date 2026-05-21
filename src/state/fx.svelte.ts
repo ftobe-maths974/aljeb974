@@ -10,6 +10,8 @@ export interface Puff {
   id: number;
   x: number;
   y: number;
+  /** Slogan optionnel affiché au-dessus du nuage. */
+  slogan?: string;
 }
 
 class FxStore {
@@ -17,28 +19,28 @@ class FxStore {
   private nextId = 1;
 
   /** Génère un petit nuage de vapeur centré sur (x, y) en page coords. */
-  spawnPuff(x: number, y: number, durationMs = 1200) {
+  spawnPuff(x: number, y: number, slogan?: string, durationMs = 1400) {
     const id = this.nextId++;
-    this.puffs = [...this.puffs, { id, x, y }];
+    this.puffs = [...this.puffs, { id, x, y, slogan }];
     setTimeout(() => {
       this.puffs = this.puffs.filter((p) => p.id !== id);
     }, durationMs);
   }
 
   /** Helper : spawn une vapeur sur l'élément DOM identifié par cardId. */
-  spawnPuffOnCard(cardId: string) {
+  spawnPuffOnCard(cardId: string, slogan?: string) {
     const el = document.querySelector<HTMLElement>(`[data-card-id="${cardId}"]`);
     if (!el) return;
     const r = el.getBoundingClientRect();
-    this.spawnPuff(r.left + r.width / 2, r.top + r.height / 2);
+    this.spawnPuff(r.left + r.width / 2, r.top + r.height / 2, slogan);
   }
 
   /** Helper : spawn une vapeur sur la fraction (utilisé quand un terme entier disparaît). */
-  spawnPuffOnFraction(fractionId: string) {
+  spawnPuffOnFraction(fractionId: string, slogan?: string) {
     const el = document.querySelector<HTMLElement>(`[data-fraction-id="${fractionId}"]`);
     if (!el) return;
     const r = el.getBoundingClientRect();
-    this.spawnPuff(r.left + r.width / 2, r.top + r.height / 2);
+    this.spawnPuff(r.left + r.width / 2, r.top + r.height / 2, slogan);
   }
 }
 

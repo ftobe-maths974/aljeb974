@@ -7,6 +7,7 @@
    * `[data-fraction-id="<targetId>"]`.
    */
   import { game } from "../state/game.svelte.ts";
+  import { t } from "../i18n/store.svelte.ts";
 
   const rect = $derived.by(() => {
     if (!game.flashTargetId) return null;
@@ -26,7 +27,7 @@
   >
     <div class="bubble">
       <span class="bang">!</span>
-      <span class="msg">Dépose cette carte<br>de l'autre côté aussi</span>
+      <span class="msg">{t().flash.line1}<br>{t().flash.line2}</span>
     </div>
     <div class="tail" aria-hidden="true"></div>
   </div>

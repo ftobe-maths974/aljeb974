@@ -2,9 +2,11 @@
   import levelsData from "../migration/levels.json";
   import OrientationGate from "./lib/OrientationGate.svelte";
   import GameScreen from "./components/GameScreen.svelte";
+  import LocaleSwitcher from "./components/LocaleSwitcher.svelte";
   import { game } from "./state/game.svelte.ts";
   import { astuce } from "./state/astuce.svelte.ts";
   import { KEY_LEVEL_IDS, getKeyLevel } from "./data/key-levels.ts";
+  import { t } from "./i18n/store.svelte.ts";
 
   type Screen = "home" | "menu" | "play";
   let screen = $state<Screen>("home");
@@ -24,49 +26,61 @@
     astuce.stop();
     screen = "menu";
   }
+
+  // Localized key-level entry (title + hint) for tooltips
+  function keyLevelLabel(id: string): string {
+    const entry = (t().keyLevels as Record<string, { title: string; hint: string }>)[id];
+    return entry?.title ?? "";
+  }
 </script>
 
 <OrientationGate>
   {#if screen === "home"}
     <main class="placeholder">
+      <div class="lang-corner">
+        <LocaleSwitcher />
+      </div>
       <header>
         <h1>Aljeb974</h1>
-        <p class="tagline">Apprends à résoudre des équations en manipulant des cartes.</p>
+        <p class="tagline">{t().ui.tagline}</p>
       </header>
 
       <section class="status">
         <p>
-          <strong>{totalChapters}</strong> chapitres ·
-          <strong>{totalLevels}</strong> niveaux chargés
+          <strong>{totalChapters}</strong> {t().ui.chapter.toLowerCase()}s ·
+          <strong>{totalLevels}</strong>
         </p>
         <p class="badges">
-          <span class="badge">✓ DSL parsé</span>
-          <span class="badge">✓ moteur TS pur</span>
-          <span class="badge">✓ 37 tests verts</span>
+          <span class="badge">{t().ui.badges.dsl}</span>
+          <span class="badge">{t().ui.badges.engine}</span>
+          <span class="badge">{t().ui.badges.tests}</span>
         </p>
 
         <div class="cta">
-          <button class="primary" onclick={() => startLevel(1, 1)}>Jouer le niveau 1-1</button>
-          <button onclick={() => (screen = "menu")}>Choisir un niveau</button>
+          <button class="primary" onclick={() => startLevel(1, 1)}>{t().ui.playFirstLevel}</button>
+          <button onclick={() => (screen = "menu")}>{t().ui.chooseLevel}</button>
         </div>
       </section>
 
       <footer>
         <a href="https://github.com/ftobe-maths974/aljeb974" target="_blank" rel="noopener">
-          github.com/ftobe-maths974/aljeb974
+          {t().ui.githubLink}
         </a>
       </footer>
     </main>
   {:else if screen === "menu"}
     <main class="menu">
       <header class="menu-top">
-        <button class="back" onclick={() => (screen = "home")}>← Accueil</button>
-        <h2>Choisis un niveau</h2>
+        <button class="back" onclick={() => (screen = "home")}>{t().ui.backHome}</button>
+        <h2>{t().ui.chooseLevelTitle}</h2>
+        <div class="lang-corner-menu">
+          <LocaleSwitcher />
+        </div>
       </header>
       <div class="chapters">
         {#each levelsData.chapters as chapter (chapter.index)}
           <section class="chapter">
-            <h3>Chapitre {chapter.index}</h3>
+            <h3>{t().ui.chapter} {chapter.index}</h3>
             <div class="levels">
               {#each Object.keys(chapter.levels).map(Number).sort((a, b) => a - b) as lv (lv)}
                 {@const id = `${chapter.index}-${lv}`}
@@ -75,11 +89,11 @@
                   class="level"
                   class:key-level={key}
                   onclick={() => startLevel(chapter.index, lv)}
-                  title={key?.title ?? ""}
+                  title={key ? keyLevelLabel(id) : ""}
                 >
                   {lv}
                   {#if key}
-                    <span class="bulb" aria-label="Nouveau : {key.title}">💡</span>
+                    <span class="bulb" aria-label={keyLevelLabel(id)}>💡</span>
                   {/if}
                 </button>
               {/each}
@@ -101,6 +115,15 @@
     height: 100%;
     padding: 2rem;
     text-align: center;
+    position: relative;
+  }
+  .lang-corner {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+  .lang-corner-menu {
+    margin-left: auto;
   }
   h1 {
     font-size: 3rem;

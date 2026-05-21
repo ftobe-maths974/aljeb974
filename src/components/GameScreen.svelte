@@ -10,6 +10,7 @@
   import LevelIntro from "./LevelIntro.svelte";
   import PuffOverlay from "./PuffOverlay.svelte";
   import { fx } from "../state/fx.svelte.ts";
+  import { t } from "../i18n/store.svelte.ts";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -45,15 +46,14 @@
       return;
     }
     if (isZero(card.atom)) {
-      // Spawn la vapeur AVANT de supprimer (sinon l'élément a disparu)
-      fx.spawnPuffOnCard(cardId);
+      fx.spawnPuffOnCard(cardId, t().fx.zeroNothing);
       try {
         game.deleteZero(cardId);
       } catch {
         /* ignoré */
       }
     } else if (isOne(card.atom)) {
-      fx.spawnPuffOnCard(cardId);
+      fx.spawnPuffOnCard(cardId, t().fx.oneNoChange);
       try {
         game.deleteOne(cardId);
       } catch {
@@ -66,11 +66,11 @@
 {#if game.state}
   <div class="screen">
     <header class="topbar">
-      <button class="back" onclick={onBack} aria-label="Retour au menu">← Menu</button>
+      <button class="back" onclick={onBack} aria-label={t().ui.backMenu}>{t().ui.backMenu}</button>
       <span class="info">
-        Niveau {game.chapter}-{game.level} · {game.state.shots}/{game.state.shotsTarget} coups
+        {t().ui.levelHeader(game.chapter, game.level)} · {t().ui.coupsRecap(game.state.shots, game.state.shotsTarget)}
       </span>
-      <button class="restart" onclick={() => game.restart()} aria-label="Recommencer">⟲</button>
+      <button class="restart" onclick={() => game.restart()} aria-label={t().ui.restart}>{t().ui.restart}</button>
     </header>
 
     <main class="play-area">
@@ -99,8 +99,8 @@
 
     {#if game.isPending}
       <div class="pending-bar">
-        <span>Pose la même carte de l'autre côté pour préserver l'équivalence.</span>
-        <button class="cancel" onclick={() => game.cancelPending()}>Annuler</button>
+        <span>{t().pending.message}</span>
+        <button class="cancel" onclick={() => game.cancelPending()}>{t().pending.cancel}</button>
       </div>
     {/if}
 
@@ -116,7 +116,7 @@
     {/if}
   </div>
 {:else}
-  <p class="loading">Chargement…</p>
+  <p class="loading">{t().ui.loading}</p>
 {/if}
 
 <style>
