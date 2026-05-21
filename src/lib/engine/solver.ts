@@ -117,11 +117,17 @@ export function countBeurks(state: GameState): number {
   return beurks;
 }
 
-/** Étoiles obtenues : 3 si solution propre dans la cible, 2 si propre mais hors-cible, 1 sinon. */
+/**
+ * Étoiles obtenues : on part de 3 et on retire 1 par pénalité indépendante.
+ *  - 1 étoile perdue si la solution n'est pas « propre » (countBeurks > 0,
+ *    typiquement quand un plateau n'est pas complètement simplifié).
+ *  - 1 étoile perdue si l'élève a dépassé la cible de coups.
+ * Minimum 1 étoile si résolu (ne descend jamais à 0 quand isSolved).
+ */
 export function stars(state: GameState): 0 | 1 | 2 | 3 {
   if (!isSolved(state)) return 0;
-  const b = countBeurks(state);
-  if (b > 0) return 1;
-  if (state.shots <= state.shotsTarget) return 3;
-  return 2;
+  let s = 3;
+  if (countBeurks(state) > 0) s -= 1;
+  if (state.shots > state.shotsTarget) s -= 1;
+  return Math.max(1, s) as 1 | 2 | 3;
 }
