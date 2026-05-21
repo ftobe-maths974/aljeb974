@@ -22,6 +22,7 @@ import {
   applyNegOne,
   canAddLiterals,
   canApplyNegOne,
+  canDivideAll,
   canFactorize,
   canFillHole,
   canMultiplyInFraction,
@@ -30,6 +31,7 @@ import {
   capabilitiesFor,
   completePiocheDrop,
   factorize,
+  divideAll,
   fillHole,
   multiplyInFraction,
   deleteOne,
@@ -203,7 +205,7 @@ class GameStore {
    * Tente une action drag-drop fraction → fraction (annulation d'opposés, etc.)
    * ou fraction → côté (cross-side). Retourne true si une opération a été appliquée.
    */
-  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string }) {
+  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean }) {
     if (!this.state) return false;
     const src = locateFraction(this.state, sourceFractionId);
     if (!src) return false;
@@ -244,6 +246,28 @@ class GameStore {
     }
 
     // ─── Mode normal ────────────────────────────────────────────────────────
+    // -1. Source de la pioche + zone « sous l'équation » → divise les deux
+    //     membres par la carte (ajoute au dénominateur de toute fraction).
+    if (
+      src.side === "pioche" &&
+      target.divideZone &&
+      canDivideAll(this.state, sourceFractionId)
+    ) {
+      this.applyState(
+        divideAll(this.state, sourceFractionId, { dropOnce: this.caps.dropOnce }),
+      );
+      requestAnimationFrame(() => {
+        // Pouf au centre de la zone divisée (sous l'équation, centré).
+        const lhs = document.querySelector<HTMLElement>('[data-side="lhs"]')?.getBoundingClientRect();
+        const rhs = document.querySelector<HTMLElement>('[data-side="rhs"]')?.getBoundingClientRect();
+        if (lhs && rhs) {
+          const cx = (lhs.left + rhs.right) / 2;
+          const cy = Math.max(lhs.bottom, rhs.bottom) + 16;
+          fx.spawnPuff(cx, cy, t().fx.divideAll, cy - 40);
+        }
+      });
+      return true;
+    }
     // 0. Source de la pioche + cible un trou « _ » → fillHole (dropdenPower / dropnumPower).
     //    Doit être vérifié AVANT le drop sur côté (le _ est inclus dans un Side).
     if (

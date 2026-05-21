@@ -18,7 +18,7 @@
     name: SideName;
     onCardClick?: (cardId: string) => void;
     onCardDoubleClick?: (cardId: string) => void;
-    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string }) => void;
+    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean }) => void;
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
 

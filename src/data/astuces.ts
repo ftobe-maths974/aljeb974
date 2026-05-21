@@ -36,7 +36,7 @@ export const ASTUCES: Record<string, Astuce> = {
   "4-1":  { kind: "drag", from: { value: "2" }, to: { value: "3" } },
   "4-4":  { kind: "tap",  target: { value: "6" }, double: true },
   "4-8":  { kind: "drag", from: { value: "2" }, to: { value: "3" } },
-  "5-1":  { kind: "tap",  target: { value: "-1" }, double: true },
+  "5-1":  { kind: "drag", from: { value: "-1" }, to: { value: "-x" } },
 };
 
 /** Construit le sélecteur CSS pour résoudre une AtomQuery via document.querySelector. */

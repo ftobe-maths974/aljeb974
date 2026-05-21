@@ -10,6 +10,7 @@
   import LevelIntro from "./LevelIntro.svelte";
   import PuffOverlay from "./PuffOverlay.svelte";
   import Solution from "./Solution.svelte";
+  import DivideZone from "./DivideZone.svelte";
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
 
@@ -17,7 +18,7 @@
 
   function handleDrop(
     sourceFractionId: string,
-    target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string },
+    target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean },
   ) {
     // Chaque drag&drop compte comme un coup, succès ou échec.
     game.recordShot();
@@ -127,6 +128,7 @@
     {#if game.state.rhs.length > 0}
       <Balance />
     {/if}
+    <DivideZone />
 
     <DragGhost />
     <FlashAlert />

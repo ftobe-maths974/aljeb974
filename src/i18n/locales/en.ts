@@ -82,6 +82,7 @@ export const en: Messages = {
     multiply: "I multiply!",
     factorize: "I break it down!",
     negOne: "×(−1)\nflips the sign!",
+    divideAll: "I divide both sides!",
   },
 
   keyLevels: {

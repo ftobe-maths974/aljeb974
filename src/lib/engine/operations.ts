@@ -516,6 +516,54 @@ export function fillHole(
   };
 }
 
+/* ─── 7.7. Diviser les deux membres par une carte (drop sous l'équation) ──── */
+
+/**
+ * Drop d'une carte de pioche dans la zone « sous l'équation » → toutes les
+ * fractions des deux membres se voient ajouter cette carte au dénominateur
+ * (créé si nécessaire). C'est l'opération « ÷ atom » appliquée à l'ensemble
+ * de l'équation, équivalente à multiplier par 1/atom des deux côtés.
+ *
+ * Différence avec fillHole : pas de trou _ requis, on agit sur toutes les
+ * fractions globalement.
+ */
+export function canDivideAll(
+  state: GameState,
+  piocheFractionId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  const loc = locateFraction(state, piocheFractionId);
+  return loc !== null && loc.side === "pioche";
+}
+
+export function divideAll(
+  state: GameState,
+  piocheFractionId: EntityId,
+  opts: { dropOnce: boolean },
+): GameState {
+  ensureNotPending(state, "divideAll");
+  if (!canDivideAll(state, piocheFractionId)) {
+    throw new Error("divideAll illégale");
+  }
+  const pLoc = locateFraction(state, piocheFractionId)!;
+  const piocheFrac = state.pioche[pLoc.fractionIdx]!;
+  const atoms = piocheFrac.numerator.map((c) => c.atom);
+  const ids = makeIdSource("div_");
+
+  const appendDen = (f: FractionInstance): FractionInstance => {
+    const existing = f.denominator ?? [];
+    const additions = atoms.map((a) => ({ id: ids.next(), atom: a }));
+    return { ...f, denominator: [...existing, ...additions] };
+  };
+
+  return {
+    ...state,
+    lhs: state.lhs.map(appendDen),
+    rhs: state.rhs.map(appendDen),
+    pioche: opts.dropOnce ? removeAt(state.pioche, pLoc.fractionIdx) : state.pioche,
+  };
+}
+
 /* ─── 8. Simplification de fraction : numérateur / dénominateur identiques ─ */
 
 /**
