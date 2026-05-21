@@ -35,7 +35,7 @@ export const KEY_LEVELS: ReadonlyArray<KeyLevel> = [
   {
     id: "1-5",
     title: "La balance",
-    hint: "Les deux côtés du = sont en équilibre. Ce que tu fais à gauche, tu dois le faire à droite. Sinon, plouf, ça déséquilibre !",
+    hint: "Les deux côtés du = pèsent pareil, comme une balance. Et le zéro, ça ne pèse rien du tout !",
     emoji: "⚖️",
   },
   {
