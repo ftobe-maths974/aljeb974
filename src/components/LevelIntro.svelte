@@ -10,7 +10,6 @@
   import { getKeyLevel, type KeyLevel } from "../data/key-levels.ts";
   import { t } from "../i18n/store.svelte.ts";
   import { onFirstInteraction } from "../state/firstInteraction.ts";
-  import { seen } from "../state/seen.svelte.ts";
 
   let visible = $state(false);
   let current = $state<KeyLevel | null>(null);
@@ -22,26 +21,24 @@
     return entry ?? null;
   });
 
-  let currentId = $state<string | null>(null);
-
   function dismiss() {
     visible = false;
     unbind?.();
     unbind = null;
-    if (currentId) seen.mark(currentId);
   }
 
-  // L'explication ne s'affiche qu'au PREMIER passage sur un niveau-clé,
-  // puis persiste jusqu'au 1ᵉʳ geste du joueur (comportement wideapp).
+  // S'affiche à chaque entrée dans un niveau-clé (menu → niveau ou restart),
+  // persiste jusqu'au 1ᵉʳ geste du joueur (comportement wideapp).
   // Capture phase pour shunter les stopPropagation des drags enfants.
   $effect(() => {
+    // game.loadCounter incrémente à chaque loadLevel, force le re-trigger
+    // même quand chapter/level ne changent pas (restart).
+    void game.loadCounter;
     const id = `${game.chapter}-${game.level}`;
-    void game.state;
     const lvl = getKeyLevel(id);
     dismiss();
-    if (lvl && !seen.has(id)) {
+    if (lvl) {
       current = lvl;
-      currentId = id;
       setTimeout(() => {
         visible = true;
         setTimeout(() => {

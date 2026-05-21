@@ -59,6 +59,13 @@ class GameStore {
   chapter = $state(1);
   level = $state(1);
 
+  /**
+   * Compteur incrémenté à chaque appel de loadLevel(), même si chapter/level
+   * sont identiques. Permet aux $effect (LevelIntro, astuces…) de se redéclencher
+   * sur un restart au niveau identique.
+   */
+  loadCounter = $state(0);
+
   caps = $derived<Capabilities>(capabilitiesFor(this.chapter, this.level));
   solved = $derived(this.state ? isSolved(this.state) : false);
   starsEarned = $derived(this.state ? stars(this.state) : 0);
@@ -94,6 +101,7 @@ class GameStore {
   loadLevel(chapter: number, level: number) {
     this.chapter = chapter;
     this.level = level;
+    this.loadCounter += 1;
     const lvl = findLevel(chapter, level);
     this.state = initialState(lvl, `${chapter}-${level}`);
     if (this.victoryTimer) {
