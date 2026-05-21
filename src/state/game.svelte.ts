@@ -68,7 +68,7 @@ class GameStore {
   victoryReady = $state(false);
   private victoryTimer: ReturnType<typeof setTimeout> | null = null;
   /** Délai (ms) entre `solved=true` et `victoryReady=true`. */
-  private static VICTORY_DELAY_MS = 1200;
+  private static VICTORY_DELAY_MS = 1500;
 
   /**
    * Flash alert : id de la fraction qui doit être déposée (= la pioche).
