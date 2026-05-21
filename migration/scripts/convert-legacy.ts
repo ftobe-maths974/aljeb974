@@ -29,7 +29,7 @@ import {
   type Term,
   type Level,
   type RevealItem,
-} from "../types.ts";
+} from "../../src/lib/engine/dsl.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../../");
