@@ -59,9 +59,8 @@
         /* ignoré */
       }
     } else if (isOne(card.atom)) {
-      // Pas de slogan ici (mauvais moment pédagogique selon retour utilisateur).
-      // On garde le pouf pour la satisfaction visuelle.
-      fx.spawnPuffOnCard(cardId);
+      // Aucun effet visuel ni slogan : le « 1 » multiplicatif n'a pas de
+      // superpower, il disparaît simplement.
       try {
         game.deleteOne(cardId);
       } catch {

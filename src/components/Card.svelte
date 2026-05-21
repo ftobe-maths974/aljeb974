@@ -125,21 +125,22 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
-  /* « ? » de spotlight attaché à la carte x (suit tout son mouvement). */
+  /* « ? » de spotlight attaché à la carte x (suit tout son mouvement).
+     Positionné juste au-dessus du bord supérieur, avec un léger chevauchement. */
   .x-spotlight {
     position: absolute;
-    top: -1.55em;
+    top: -0.55em;
     left: 50%;
     transform: translateX(-50%);
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
     font-weight: 900;
-    font-size: 1.2em;
+    font-size: 1em;
     line-height: 1;
     color: var(--accent);
     text-shadow:
-      0 0 12px rgba(245, 158, 11, 0.6),
-      0 2px 8px rgba(0, 0, 0, 0.7);
+      0 0 10px rgba(245, 158, 11, 0.55),
+      0 2px 6px rgba(0, 0, 0, 0.65);
     pointer-events: none;
     animation: x-levitate 2.4s ease-in-out infinite;
     transform-origin: center;
@@ -149,7 +150,7 @@
       transform: translate(-50%, 0) scale(1) rotate(-4deg);
     }
     50% {
-      transform: translate(-50%, -8px) scale(1.07) rotate(4deg);
+      transform: translate(-50%, -4px) scale(1.06) rotate(4deg);
     }
   }
   .card:hover,
