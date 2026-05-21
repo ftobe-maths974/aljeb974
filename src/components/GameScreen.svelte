@@ -29,9 +29,13 @@
     game.tryCardDrop(sourceCardId, targetCardId);
   }
 
+  // Détection manuelle de double-clic (plus fiable que ondblclick natif sur
+  // mobile et avec pointerCapture). Si deux clics sur la même carte arrivent
+  // en < 350 ms → tryFactorize.
+  let lastClickTime = 0;
+  let lastClickCardId: string | null = null;
+
   function handleCardDoubleClick(cardId: string) {
-    // Le double-clic ne compte pas de coup en plus (les 2 clicks ont déjà
-    // chacun incrémenté). Sert au primeFactorPower (chap. 4+).
     game.tryFactorize(cardId);
   }
 
@@ -39,6 +43,17 @@
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
   function handleCardClick(cardId: string) {
     if (!game.state) return;
+    // Détection manuelle de double-clic : 2 clics sur la même carte en < 350 ms.
+    const now = performance.now();
+    const isDouble = lastClickCardId === cardId && now - lastClickTime < 350;
+    if (isDouble) {
+      lastClickTime = 0;
+      lastClickCardId = null;
+      handleCardDoubleClick(cardId);
+      return;
+    }
+    lastClickTime = now;
+    lastClickCardId = cardId;
     // Chaque clic compte comme un coup, succès ou échec.
     game.recordShot();
     // En block mode, tout clic ailleurs que sur la pioche-cible = alerte.
