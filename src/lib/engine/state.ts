@@ -10,6 +10,25 @@
 
 import type { Atom, Level, Term } from "./dsl.ts";
 
+/**
+ * État de « drop en attente » — modélise le block mode du legacy :
+ * la carte de pioche a été posée d'un côté de l'équation, et il faut maintenant
+ * la poser AUSSI sur l'autre côté pour préserver l'équivalence.
+ *
+ * Tant que `pending` est non-null, toutes les autres opérations sont refusées
+ * par le moteur (équivalent du flag `blocked = true` du legacy).
+ *
+ * Cf. migration/MECHANICS.md §1.
+ */
+export interface PendingState {
+  /** Id de la fraction de pioche qui doit être déposée sur chaque cible restante. */
+  piocheFractionId: EntityId;
+  /** Membres qui n'ont pas encore reçu la carte. Vide → l'opération sera close. */
+  remainingTargets: ("lhs" | "rhs")[];
+  /** Forme structurale de la carte à insérer (atomes, sans ids). */
+  cardToInsert: Term;
+}
+
 /** Identifiant unique d'une entité (carte/fraction/membre) dans un état donné. */
 export type EntityId = string;
 
@@ -48,6 +67,8 @@ export interface GameState {
   shotsTarget: number;
   /** Vrai dès qu'isSolved a retourné vrai (figé jusqu'au reset). */
   won: boolean;
+  /** Drop de pioche en cours, attente du 2ᵉ geste de l'élève. Null hors-block-mode. */
+  pending: PendingState | null;
 }
 
 /* ─── Génération d'ids stables ────────────────────────────────────────────── */
@@ -94,6 +115,7 @@ export function initialState(level: Level, levelId: string): GameState {
     shots: 0,
     shotsTarget: level.shots,
     won: false,
+    pending: null,
   };
 }
 

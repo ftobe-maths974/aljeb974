@@ -15,17 +15,19 @@
 
 import {
   cancelOpposites,
+  cancelPending,
   canCancelOpposites,
   canMoveAcross,
   capabilitiesFor,
+  completePiocheDrop,
   deleteOne,
   deleteZero,
-  dropFromPioche,
   initialState,
   isSolved,
   locateFraction,
   moveAcross,
   stars,
+  startPiocheDrop,
   type Capabilities,
   type GameState,
 } from "../lib/engine/index.ts";
@@ -52,6 +54,25 @@ class GameStore {
   caps = $derived<Capabilities>(capabilitiesFor(this.chapter, this.level));
   solved = $derived(this.state ? isSolved(this.state) : false);
   starsEarned = $derived(this.state ? stars(this.state) : 0);
+  /** True quand un drop de pioche est en cours et attend le 2ᵉ geste. */
+  isPending = $derived(this.state?.pending != null);
+
+  /**
+   * Flash alert : id de la fraction qui doit être déposée (= la pioche).
+   * Set quand l'élève fait une action interdite en block mode.
+   */
+  flashTargetId = $state<string | null>(null);
+  private flashTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Déclenche le « ! » au-dessus de la carte pioche pour 1.2 s. */
+  flashAlert() {
+    if (!this.state?.pending) return;
+    this.flashTargetId = this.state.pending.piocheFractionId;
+    if (this.flashTimer) clearTimeout(this.flashTimer);
+    this.flashTimer = setTimeout(() => {
+      this.flashTargetId = null;
+    }, 1200);
+  }
 
   loadLevel(chapter: number, level: number) {
     this.chapter = chapter;
@@ -67,12 +88,26 @@ class GameStore {
 
   deleteZero(cardId: string) {
     if (!this.state) return;
+    if (this.state.pending) {
+      this.flashAlert();
+      return;
+    }
     this.state = deleteZero(this.state, cardId);
   }
 
   deleteOne(cardId: string) {
     if (!this.state) return;
+    if (this.state.pending) {
+      this.flashAlert();
+      return;
+    }
     this.state = deleteOne(this.state, cardId);
+  }
+
+  /** Annule un drop partiel et restaure l'état précédent. */
+  cancelPending() {
+    if (!this.state) return;
+    this.state = cancelPending(this.state);
   }
 
   /**
@@ -84,16 +119,33 @@ class GameStore {
     const src = locateFraction(this.state, sourceFractionId);
     if (!src) return false;
 
-    // 1. Si la source vient de la pioche et la cible est un côté → dropFromPioche
+    // ─── Block mode : on n'accepte QUE le drop de la pioche-en-attente sur
+    //                 un côté encore en `remainingTargets`. Toute autre tentative
+    //                 déclenche le flash alert.
+    if (this.state.pending) {
+      if (
+        sourceFractionId === this.state.pending.piocheFractionId &&
+        target.side &&
+        this.state.pending.remainingTargets.includes(target.side)
+      ) {
+        this.state = completePiocheDrop(this.state, target.side, {
+          dropOnce: this.caps.dropOnce,
+        });
+        return true;
+      }
+      // Drop interdit : on lève une alerte
+      this.flashAlert();
+      return false;
+    }
+
+    // ─── Mode normal ────────────────────────────────────────────────────────
+    // 1. Source de la pioche + cible un côté → première étape du drop équivalence
     if (src.side === "pioche" && (target.side === "lhs" || target.side === "rhs")) {
-      this.state = dropFromPioche(this.state, sourceFractionId, target.side, {
-        dropOnce: this.caps.dropOnce,
-      });
+      this.state = startPiocheDrop(this.state, sourceFractionId, target.side);
       return true;
     }
 
-    // 2. Si la cible est une fraction et que les deux sont au même membre :
-    //    tenter l'annulation d'opposés.
+    // 2. Cible une fraction du même membre + atomes opposés → cancelOpposites
     if (target.fractionId) {
       const tgt = locateFraction(this.state, target.fractionId);
       if (
@@ -106,7 +158,7 @@ class GameStore {
       }
     }
 
-    // 3. Si la cible est l'autre membre (et crossPower actif) → moveAcross.
+    // 3. Cible l'autre membre (et crossPower actif) → moveAcross
     if (
       this.caps.crossPower &&
       (target.side === "lhs" || target.side === "rhs") &&

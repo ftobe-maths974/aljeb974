@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { FractionInstance, Side as SideName } from "../lib/engine/index.ts";
   import Fraction from "./Fraction.svelte";
+  import DropZone from "./DropZone.svelte";
   import { drag } from "../state/drag.svelte.ts";
+  import { game } from "../state/game.svelte.ts";
+  import { serializeTerm } from "../lib/engine/index.ts";
 
   let {
     fractions,
@@ -21,6 +24,15 @@
       drag.hoverSide === name &&
       drag.hoverFractionId === null,
   );
+
+  // Drop zone à afficher si on est en pending et que ce côté est encore à servir
+  const pendingTarget = $derived(
+    (name === "lhs" || name === "rhs") &&
+      game.state?.pending?.remainingTargets.includes(name as "lhs" | "rhs"),
+  );
+  const pendingSummary = $derived(
+    game.state?.pending ? serializeTerm(game.state.pending.cardToInsert) : "",
+  );
 </script>
 
 <div
@@ -37,6 +49,12 @@
     {/if}
     <Fraction {fraction} {onCardClick} {onDrop} />
   {/each}
+  {#if pendingTarget}
+    {#if fractions.length > 0}
+      <span class="plus" aria-hidden="true">+</span>
+    {/if}
+    <DropZone side={name as "lhs" | "rhs"} cardSummary={pendingSummary} />
+  {/if}
 </div>
 
 <style>

@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   cancelOpposites,
+  cancelPending,
   canCancelOpposites,
   canDeleteOne,
   canDeleteZero,
+  completePiocheDrop,
   deleteOne,
   deleteZero,
-  dropFromPioche,
   moveAcross,
   reverseInPioche,
+  startPiocheDrop,
 } from "../operations.ts";
 import { initialState } from "../state.ts";
 import { parseTerm } from "../dsl.ts";
@@ -103,19 +105,29 @@ describe("reverseInPioche", () => {
   });
 });
 
-describe("dropFromPioche", () => {
-  it("pose la carte des deux côtés, retire de la pioche si dropOnce", () => {
+describe("startPiocheDrop + completePiocheDrop (block mode)", () => {
+  it("le drop se fait en 2 étapes : pose d'abord lhs, puis pending exige rhs", () => {
     // niveau 1-9 : lhs=[x,g], rhs=[s], pioche=[-g] — dropOnce vrai en chapitre 1
     const s = initialState(
       lvl({ lhs: ["x", "g"], rhs: ["s"], pioche: ["-g"], shots: 3 }),
       "1-9",
     );
     const negG = s.pioche[0]!.id;
-    const s2 = dropFromPioche(s, negG, "lhs", { dropOnce: true });
-    expect(s2.lhs.length).toBe(3); // x, g, -g
-    expect(s2.rhs.length).toBe(2); // s, -g
-    expect(s2.pioche.length).toBe(0); // consommée
-    expect(s2.shots).toBe(1);
+    const s2 = startPiocheDrop(s, negG, "lhs");
+    expect(s2.lhs.length).toBe(3); // x, g, -g posé immédiatement
+    expect(s2.rhs.length).toBe(1); // pas encore (rhs en attente)
+    expect(s2.pioche.length).toBe(1); // toujours là tant que pending
+    expect(s2.shots).toBe(0); // pas encore incrémenté
+    expect(s2.pending).not.toBeNull();
+    expect(s2.pending!.remainingTargets).toEqual(["rhs"]);
+
+    // 2ᵉ étape : finir sur rhs
+    const s3 = completePiocheDrop(s2, "rhs", { dropOnce: true });
+    expect(s3.lhs.length).toBe(3);
+    expect(s3.rhs.length).toBe(2); // s, -g
+    expect(s3.pioche.length).toBe(0); // consommée
+    expect(s3.shots).toBe(1); // incrémenté à la fin
+    expect(s3.pending).toBeNull();
   });
 
   it("garde la carte en pioche si dropOnce=false (chap. 2+)", () => {
@@ -124,8 +136,28 @@ describe("dropFromPioche", () => {
       "test",
     );
     const g = s.pioche[0]!.id;
-    const s2 = dropFromPioche(s, g, "lhs", { dropOnce: false });
-    expect(s2.pioche.length).toBe(1);
+    const s2 = startPiocheDrop(s, g, "lhs");
+    const s3 = completePiocheDrop(s2, "rhs", { dropOnce: false });
+    expect(s3.pioche.length).toBe(1);
+    expect(s3.pending).toBeNull();
+  });
+
+  it("refuse les autres opérations tant que pending", () => {
+    const s = initialState(lvl({ lhs: ["x"], rhs: ["s"], pioche: ["g"], shots: 1 }), "t");
+    const s2 = startPiocheDrop(s, s.pioche[0]!.id, "lhs");
+    // tentative de moveAcross alors qu'on est en pending → refusée
+    expect(() => moveAcross(s2, s2.rhs[0]!.id)).toThrow(/drop en cours/);
+    // tentative de deleteOne sur une carte → refusée
+    expect(() => deleteOne(s2, s2.lhs[0]!.numerator[0]!.id)).toThrow(/drop en cours/);
+  });
+
+  it("cancelPending défait la pose partielle", () => {
+    const s = initialState(lvl({ lhs: ["x"], rhs: ["s"], pioche: ["g"], shots: 1 }), "t");
+    const s2 = startPiocheDrop(s, s.pioche[0]!.id, "lhs");
+    expect(s2.lhs.length).toBe(2);
+    const s3 = cancelPending(s2);
+    expect(s3.lhs.length).toBe(1);
+    expect(s3.pending).toBeNull();
   });
 });
 

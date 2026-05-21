@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { countBeurks, isSolved, stars } from "../solver.ts";
 import { initialState } from "../state.ts";
-import { cancelOpposites, deleteZero, dropFromPioche } from "../operations.ts";
+import {
+  cancelOpposites,
+  completePiocheDrop,
+  deleteZero,
+  startPiocheDrop,
+} from "../operations.ts";
 import { parseTerm } from "../dsl.ts";
 import type { Level, RevealItem } from "../dsl.ts";
 
@@ -124,19 +129,23 @@ describe("scenario : niveau 1-5 résolu (avec rhs)", () => {
   });
 });
 
-describe("scenario : niveau 1-9 (drop depuis pioche)", () => {
+describe("scenario : niveau 1-9 (drop depuis pioche en 2 étapes)", () => {
   it("résolution complète", () => {
     // niveau 1-9 : lhs=[x, g], rhs=[s], pioche=[-g]
-    // solution : drop -g sur lhs → lhs=[x, g, -g], rhs=[s, -g]
+    // solution : start drop -g sur lhs → pending: rhs
+    //           complete sur rhs → lhs=[x, g, -g], rhs=[s, -g]
     //           puis annuler g, -g sur lhs → lhs=[x], rhs=[s, -g]
     let s = initialState(
       lvl({ lhs: ["x", "g"], rhs: ["s"], pioche: ["-g"], shots: 3 }),
       "1-9",
     );
-    s = dropFromPioche(s, s.pioche[0]!.id, "lhs", { dropOnce: true });
+    s = startPiocheDrop(s, s.pioche[0]!.id, "lhs");
+    expect(s.pending).not.toBeNull();
+    s = completePiocheDrop(s, "rhs", { dropOnce: true });
     expect(s.lhs.length).toBe(3); // x, g, -g
     expect(s.rhs.length).toBe(2); // s, -g
     expect(s.pioche.length).toBe(0);
+    expect(s.pending).toBeNull();
     s = cancelOpposites(s, s.lhs[1]!.id, s.lhs[2]!.id);
     expect(s.lhs.length).toBe(1);
     expect(isSolved(s)).toBe(true);

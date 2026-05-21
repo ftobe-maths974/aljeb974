@@ -4,6 +4,7 @@
   import Side from "./Side.svelte";
   import VictoryOverlay from "./VictoryOverlay.svelte";
   import DragGhost from "./DragGhost.svelte";
+  import FlashAlert from "./FlashAlert.svelte";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -18,6 +19,14 @@
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
   function handleCardClick(cardId: string) {
     if (!game.state) return;
+    // En block mode, tout clic ailleurs que sur la pioche-cible = alerte.
+    if (game.state.pending) {
+      const loc = locateCard(game.state, cardId);
+      if (loc && loc.side !== "pioche") {
+        game.flashAlert();
+      }
+      return;
+    }
     const loc = locateCard(game.state, cardId);
     if (!loc) return;
     const list =
@@ -29,13 +38,13 @@
       try {
         game.deleteZero(cardId);
       } catch {
-        // Suppression non légale dans ce contexte : ignorer en silence.
+        /* ignoré */
       }
     } else if (isOne(card.atom)) {
       try {
         game.deleteOne(cardId);
       } catch {
-        /* idem */
+        /* ignoré */
       }
     }
   }
@@ -66,6 +75,14 @@
     {/if}
 
     <DragGhost />
+    <FlashAlert />
+
+    {#if game.isPending}
+      <div class="pending-bar">
+        <span>Pose la même carte de l'autre côté pour préserver l'équivalence.</span>
+        <button class="cancel" onclick={() => game.cancelPending()}>Annuler</button>
+      </div>
+    {/if}
 
     {#if game.solved}
       <VictoryOverlay
@@ -131,5 +148,35 @@
   .loading {
     padding: 2rem;
     text-align: center;
+  }
+  .pending-bar {
+    position: absolute;
+    top: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(245, 158, 11, 0.95);
+    color: #0f1722;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .pending-bar .cancel {
+    background: rgba(0, 0, 0, 0.15);
+    color: inherit;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .pending-bar .cancel:hover {
+    background: rgba(0, 0, 0, 0.3);
   }
 </style>

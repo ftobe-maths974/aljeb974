@@ -16,8 +16,15 @@
  */
 
 import { atomsOpposite, flipSign, isZero, isOne, literalValue, fromLiteral } from "./atoms.ts";
+import type { Atom, Term } from "./dsl.ts";
 import type { EntityId, FractionInstance, GameState, Side } from "./state.ts";
 import { locateCard, locateFraction, makeIdSource } from "./state.ts";
+
+/* ─── Gardien : la plupart des op refusent en pending ────────────────────── */
+
+function ensureNotPending(state: GameState, op: string): void {
+  if (state.pending) throw new Error(`${op} refusée : drop en cours`);
+}
 
 /* ─── Utils internes ──────────────────────────────────────────────────────── */
 
@@ -78,6 +85,7 @@ function removeCardAt(
  * Cf. legacy/js/application.coffee:911-914.
  */
 export function canDeleteZero(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
   const loc = locateCard(state, cardId);
   if (!loc) return false;
   if (loc.side === "pioche") return false; // pas d'élimination en pioche
@@ -91,6 +99,7 @@ export function canDeleteZero(state: GameState, cardId: EntityId): boolean {
 }
 
 export function deleteZero(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "deleteZero");
   if (!canDeleteZero(state, cardId)) throw new Error("deleteZero illégale");
   const loc = locateCard(state, cardId)!;
   return updateSide(state, loc.side, (fs) => removeAt(fs, loc.fractionIdx));
@@ -108,6 +117,7 @@ export function deleteZero(state: GameState, cardId: EntityId): GameState {
  * sur les "1" en dénominateur (équivalent : division par 1 inutile). Idem ici.
  */
 export function canDeleteOne(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
   const loc = locateCard(state, cardId);
   if (!loc || loc.side === "pioche") return false;
   const frac = state[loc.side][loc.fractionIdx]!;
@@ -119,6 +129,7 @@ export function canDeleteOne(state: GameState, cardId: EntityId): boolean {
 }
 
 export function deleteOne(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "deleteOne");
   if (!canDeleteOne(state, cardId)) throw new Error("deleteOne illégale");
   const loc = locateCard(state, cardId)!;
   return updateSide(state, loc.side, (fs) =>
@@ -140,6 +151,7 @@ export function canCancelOpposites(
   draggedFractionId: EntityId,
   targetFractionId: EntityId,
 ): boolean {
+  if (state.pending) return false;
   if (draggedFractionId === targetFractionId) return false;
   const dl = locateFraction(state, draggedFractionId);
   const tl = locateFraction(state, targetFractionId);
@@ -162,6 +174,7 @@ export function cancelOpposites(
   draggedFractionId: EntityId,
   targetFractionId: EntityId,
 ): GameState {
+  ensureNotPending(state, "cancelOpposites");
   if (!canCancelOpposites(state, draggedFractionId, targetFractionId)) {
     throw new Error("cancelOpposites illégale");
   }
@@ -183,11 +196,13 @@ export function cancelOpposites(
  * Pas de contrainte sur le contenu : on inverse n'importe quelle carte de pioche.
  */
 export function canReverseInPioche(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
   const loc = locateCard(state, cardId);
   return loc !== null && loc.side === "pioche";
 }
 
 export function reverseInPioche(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "reverseInPioche");
   if (!canReverseInPioche(state, cardId)) throw new Error("reverseInPioche illégale");
   const loc = locateCard(state, cardId)!;
   return updateSide(state, loc.side, (fs) => {
@@ -204,54 +219,116 @@ export function reverseInPioche(state: GameState, cardId: EntityId): GameState {
   });
 }
 
-/* ─── 5. Drop d'une carte de la pioche sur un membre ─────────────────────── */
+/* ─── 5. Drop d'une carte de la pioche : opération en 2 étapes ───────────── */
+
+/** Crée une FractionInstance avec ids frais à partir d'atomes purs (Term). */
+function instantiateTerm(term: Term, ids: ReturnType<typeof makeIdSource>): FractionInstance {
+  return {
+    id: ids.next(),
+    numerator: term.numerator.map((a) => ({ id: ids.next(), atom: a })),
+    denominator: term.denominator?.map((a) => ({ id: ids.next(), atom: a })),
+  };
+}
+
+/** Convertit une instance en Term immuable (sans ids). */
+function instanceToTerm(f: FractionInstance): Term {
+  return {
+    numerator: f.numerator.map((c) => c.atom),
+    denominator: f.denominator?.map((c) => c.atom),
+  };
+}
 
 /**
- * Pose d'une carte de la pioche sur un côté lhs/rhs.
+ * Première étape du drop depuis la pioche : pose la carte sur `targetSide`
+ * et entre en mode « pending » — il faut maintenant la poser AUSSI sur l'autre
+ * côté pour préserver l'équivalence.
  *
- * Important : pour préserver l'équivalence, le moteur doit AUSSI poser la
- * carte sur l'AUTRE membre. Dans le jeu legacy, ce 2ᵉ drop est imposé via
- * une « DropCard » (DC) qui apparaît sur l'autre membre et bloque l'interaction
- * tant qu'on n'y a pas répondu.
- *
- * Ici on simplifie : `dropFromPioche` ajoute la fraction des DEUX côtés
- * directement, comme une opération atomique. L'UI peut choisir d'orchestrer
- * une UX en 2 étapes par-dessus.
- *
- * Si `dropOnce` est vrai (chapitre 1), la fraction est *retirée* de la pioche.
- * Sinon (chap. 2+), elle reste réutilisable.
+ * Cf. legacy `droppableSide` ([application.coffee:978-984](../../legacy/js/application.coffee#L978-L984))
+ * et migration/MECHANICS.md §1.
  */
-export function dropFromPioche(
+export function startPiocheDrop(
   state: GameState,
   fractionId: EntityId,
   targetSide: "lhs" | "rhs",
-  opts: { dropOnce: boolean },
 ): GameState {
+  ensureNotPending(state, "startPiocheDrop");
   const loc = locateFraction(state, fractionId);
   if (!loc) throw new Error(`fraction ${fractionId} introuvable`);
-  if (loc.side !== "pioche") throw new Error("dropFromPioche : fraction pas en pioche");
+  if (loc.side !== "pioche") throw new Error("startPiocheDrop : fraction pas en pioche");
 
   const piocheFrac = state.pioche[loc.fractionIdx]!;
   const otherSide: "lhs" | "rhs" = targetSide === "lhs" ? "rhs" : "lhs";
-  const ids = makeIdSource(`d${state.shots + 1}_`);
+  const ids = makeIdSource(`d${state.shots + 1}_a_`);
+  const cardToInsert = instanceToTerm(piocheFrac);
 
-  const clone = (f: FractionInstance): FractionInstance => ({
-    id: ids.next(),
-    numerator: f.numerator.map((c) => ({ id: ids.next(), atom: c.atom })),
-    denominator: f.denominator?.map((c) => ({ id: ids.next(), atom: c.atom })),
-  });
-
-  let next: GameState = {
+  return {
     ...state,
-    shots: state.shots + 1,
-    [targetSide]: [...state[targetSide], clone(piocheFrac)],
-    [otherSide]: [...state[otherSide], clone(piocheFrac)],
+    [targetSide]: [...state[targetSide], instantiateTerm(cardToInsert, ids)],
+    pending: {
+      piocheFractionId: fractionId,
+      remainingTargets: [otherSide],
+      cardToInsert,
+    },
   };
+}
 
-  if (opts.dropOnce) {
-    next = { ...next, pioche: removeAt(next.pioche, loc.fractionIdx) };
+/**
+ * Deuxième étape (ou n-ième) : pose la carte de pioche sur un des côtés
+ * encore en attente. Quand tous les côtés sont servis, le pending est levé,
+ * `shots` est incrémenté, et la carte est retirée de la pioche si `dropOnce`.
+ */
+export function completePiocheDrop(
+  state: GameState,
+  side: "lhs" | "rhs",
+  opts: { dropOnce: boolean },
+): GameState {
+  if (!state.pending) throw new Error("completePiocheDrop : aucun pending");
+  const idx = state.pending.remainingTargets.indexOf(side);
+  if (idx < 0) throw new Error(`completePiocheDrop : côté ${side} pas attendu`);
+
+  const ids = makeIdSource(`d${state.shots + 1}_b_`);
+  const clone = instantiateTerm(state.pending.cardToInsert, ids);
+  const newRemaining = state.pending.remainingTargets.filter((_, i) => i !== idx);
+  const isDone = newRemaining.length === 0;
+
+  if (isDone) {
+    // Opération close : on incrémente shots, retire de la pioche si besoin.
+    const piocheLoc = locateFraction(state, state.pending.piocheFractionId);
+    return {
+      ...state,
+      shots: state.shots + 1,
+      pending: null,
+      [side]: [...state[side], clone],
+      pioche:
+        opts.dropOnce && piocheLoc
+          ? removeAt(state.pioche, piocheLoc.fractionIdx)
+          : state.pioche,
+    };
   }
 
+  return {
+    ...state,
+    [side]: [...state[side], clone],
+    pending: { ...state.pending, remainingTargets: newRemaining },
+  };
+}
+
+/**
+ * Annule un drop en cours (échappatoire). Retire les cartes déjà posées et
+ * efface le pending. Utile pour un bouton « ↺ » côté UI si l'élève change d'avis.
+ *
+ * Implémentation simple : on conserve l'invariant que `cardToInsert` est ce qui
+ * a été ajouté à *chaque côté absent* des `remainingTargets`. On retire donc
+ * la *dernière* fraction de chaque côté ayant déjà reçu la carte.
+ */
+export function cancelPending(state: GameState): GameState {
+  if (!state.pending) return state;
+  const allSides: ("lhs" | "rhs")[] = ["lhs", "rhs"];
+  const filledSides = allSides.filter((s) => !state.pending!.remainingTargets.includes(s));
+  let next: GameState = { ...state, pending: null };
+  for (const s of filledSides) {
+    next = { ...next, [s]: next[s].slice(0, -1) };
+  }
   return next;
 }
 
@@ -269,11 +346,13 @@ export function dropFromPioche(
  * on inverse cet atome direct.
  */
 export function canMoveAcross(state: GameState, fractionId: EntityId): boolean {
+  if (state.pending) return false;
   const loc = locateFraction(state, fractionId);
   return loc !== null && (loc.side === "lhs" || loc.side === "rhs");
 }
 
 export function moveAcross(state: GameState, fractionId: EntityId): GameState {
+  ensureNotPending(state, "moveAcross");
   if (!canMoveAcross(state, fractionId)) throw new Error("moveAcross illégale");
   const loc = locateFraction(state, fractionId)!;
   const fromSide = loc.side as "lhs" | "rhs";
@@ -326,6 +405,7 @@ export function canAddLiterals(
   draggedFractionId: EntityId,
   targetFractionId: EntityId,
 ): boolean {
+  if (state.pending) return false;
   if (draggedFractionId === targetFractionId) return false;
   const dl = locateFraction(state, draggedFractionId);
   const tl = locateFraction(state, targetFractionId);
@@ -343,6 +423,7 @@ export function addLiterals(
   draggedFractionId: EntityId,
   targetFractionId: EntityId,
 ): GameState {
+  ensureNotPending(state, "addLiterals");
   if (!canAddLiterals(state, draggedFractionId, targetFractionId)) {
     throw new Error("addLiterals illégale");
   }
