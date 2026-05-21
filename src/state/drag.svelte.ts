@@ -62,19 +62,23 @@ class DragStore {
 
 /**
  * Le browser dispatche un événement `click` synthétique après un `pointerup`,
- * même quand un drag vient d'avoir lieu. Pour éviter de compter à la fois le
- * drag ET ce click fantôme, on installe un listener click en CAPTURE one-shot
- * qui consomme l'événement avant qu'il atteigne le onclick du bouton.
+ * même quand un drag vient d'avoir lieu. Avec setPointerCapture, ce click fire
+ * sur l'élément RELÂCHÉ (la cible), pas sur l'élément source du drag — un
+ * listener sur le source ne suffit donc pas.
+ *
+ * On installe à la place un listener `click` au niveau DOCUMENT en phase de
+ * CAPTURE, one-shot : il intercepte le 1ᵉʳ click qui suit, peu importe la
+ * cible, et l'avale (stopImmediatePropagation + preventDefault). Auto-cleanup
+ * après ~80 ms si aucun click n'arrive (release dans le vide).
  */
-function suppressNextClickOn(node: HTMLElement) {
+function suppressNextClick() {
   const handler = (e: Event) => {
     e.stopImmediatePropagation();
     e.preventDefault();
-    node.removeEventListener("click", handler, true);
+    document.removeEventListener("click", handler, true);
   };
-  node.addEventListener("click", handler, true);
-  // Fallback : si aucun click n'arrive (release ailleurs), on nettoie.
-  setTimeout(() => node.removeEventListener("click", handler, true), 80);
+  document.addEventListener("click", handler, true);
+  setTimeout(() => document.removeEventListener("click", handler, true), 80);
 }
 
 export const drag = new DragStore();
@@ -243,7 +247,7 @@ function beginDrag(
       drag.hoverCardId = null;
       drag.hoverSide = null;
       // Empêche le click synthétique post-pointerup d'être comptabilisé.
-      suppressNextClickOn(node);
+      suppressNextClick();
       onEnd(ev.clientX, ev.clientY);
     }
   }
