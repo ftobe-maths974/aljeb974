@@ -17,7 +17,7 @@
 
   function handleDrop(
     sourceFractionId: string,
-    target: { fractionId?: string; side?: "lhs" | "rhs" },
+    target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string },
   ) {
     // Chaque drag&drop compte comme un coup, succès ou échec.
     game.recordShot();

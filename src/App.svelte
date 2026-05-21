@@ -111,6 +111,15 @@
     padding: 2rem;
     text-align: center;
     position: relative;
+    /* Illustration Réunion en fond, voilée pour préserver la lisibilité. */
+    background:
+      linear-gradient(
+        180deg,
+        rgba(15, 23, 34, 0.55) 0%,
+        rgba(15, 23, 34, 0.78) 50%,
+        rgba(15, 23, 34, 0.95) 100%
+      ),
+      url("/renyon.1.jpg") center / cover no-repeat;
   }
   .lang-corner {
     position: absolute;

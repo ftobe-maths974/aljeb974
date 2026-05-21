@@ -80,9 +80,16 @@ export const drag = new DragStore();
 
 /* ─── Action : drag d'une Fraction ────────────────────────────────────────── */
 
+export interface DropTarget {
+  fractionId?: string;
+  side?: "lhs" | "rhs";
+  /** Carte « _ » (trou) survolée — utilisée pour le drop dans dén/num (dropdenPower / dropnumPower). */
+  holeCardId?: string;
+}
+
 export interface DraggableParams {
   fractionId: string;
-  onDrop: (target: { fractionId?: string; side?: "lhs" | "rhs" }) => void;
+  onDrop: (target: DropTarget) => void;
 }
 
 export function draggable(node: HTMLElement, params: DraggableParams) {
@@ -275,12 +282,18 @@ function pickFractionTarget(
   x: number,
   y: number,
   sourceFractionId: string,
-): { fractionId?: string; side?: "lhs" | "rhs" } | null {
+): DropTarget | null {
   const elements = document.elementsFromPoint(x, y);
   let fractionId: string | undefined;
   let side: "lhs" | "rhs" | undefined;
+  let holeCardId: string | undefined;
   for (const el of elements) {
     if (!(el instanceof HTMLElement)) continue;
+    if (!holeCardId) {
+      const holeEl = el.closest<HTMLElement>('[data-card-value="_"]');
+      const id = holeEl?.dataset.cardId;
+      if (id) holeCardId = id;
+    }
     if (!fractionId) {
       const fid = el.closest<HTMLElement>("[data-fraction-id]")?.dataset.fractionId;
       if (fid && fid !== sourceFractionId) fractionId = fid;
@@ -289,10 +302,10 @@ function pickFractionTarget(
       const s = el.closest<HTMLElement>("[data-side]")?.dataset.side;
       if (s === "lhs" || s === "rhs") side = s;
     }
-    if (fractionId && side) break;
+    if (holeCardId && fractionId && side) break;
   }
-  if (!fractionId && !side) return null;
-  return { fractionId, side };
+  if (!fractionId && !side && !holeCardId) return null;
+  return { fractionId, side, holeCardId };
 }
 
 function updateHoverForCard(x: number, y: number, sourceCardId: string, parentFractionId: string) {

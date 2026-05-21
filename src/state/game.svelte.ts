@@ -18,10 +18,12 @@ import {
   cancelPending,
   canCancelOpposites,
   canMoveAcross,
+  canFillHole,
   canReverseInPioche,
   canSimplifyFraction,
   capabilitiesFor,
   completePiocheDrop,
+  fillHole,
   deleteOne,
   deleteZero,
   initialState,
@@ -193,7 +195,7 @@ class GameStore {
    * Tente une action drag-drop fraction → fraction (annulation d'opposés, etc.)
    * ou fraction → côté (cross-side). Retourne true si une opération a été appliquée.
    */
-  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs" }) {
+  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string }) {
     if (!this.state) return false;
     const src = locateFraction(this.state, sourceFractionId);
     if (!src) return false;
@@ -234,6 +236,21 @@ class GameStore {
     }
 
     // ─── Mode normal ────────────────────────────────────────────────────────
+    // 0. Source de la pioche + cible un trou « _ » → fillHole (dropdenPower / dropnumPower).
+    //    Doit être vérifié AVANT le drop sur côté (le _ est inclus dans un Side).
+    if (
+      src.side === "pioche" &&
+      target.holeCardId &&
+      canFillHole(this.state, sourceFractionId, target.holeCardId)
+    ) {
+      this.applyState(
+        fillHole(this.state, sourceFractionId, target.holeCardId, {
+          dropOnce: this.caps.dropOnce,
+        }),
+      );
+      return true;
+    }
+
     // 1. Source de la pioche + cible un côté → première étape du drop équivalence
     if (src.side === "pioche" && (target.side === "lhs" || target.side === "rhs")) {
       this.applyState(startPiocheDrop(this.state, sourceFractionId, target.side));

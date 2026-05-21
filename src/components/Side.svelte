@@ -16,7 +16,7 @@
     fractions: FractionInstance[];
     name: SideName;
     onCardClick?: (cardId: string) => void;
-    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs" }) => void;
+    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string }) => void;
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
 

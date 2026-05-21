@@ -433,6 +433,89 @@ export function canAddLiterals(
   return dFrac.numerator[0]!.atom.kind === "literal" && tFrac.numerator[0]!.atom.kind === "literal";
 }
 
+/* ─── 7.5. Drop d'une carte de pioche dans un trou « _ » (dropdenPower) ───── */
+
+/**
+ * Quand l'élève dépose une carte de pioche sur un trou `_` d'une fraction,
+ * deux effets simultanés :
+ *  1. Le trou est REMPLACÉ par les atomes de la carte de pioche (numérateur
+ *     du pioche-fraction).
+ *  2. Pour préserver l'équivalence, les MÊMES atomes sont AJOUTÉS dans la
+ *     même région (num ou dén) de TOUTES les autres fractions non-pioche.
+ *     Si la région n'existe pas (pas de dénominateur), elle est créée.
+ *
+ * V1 simplifiée : pas de mécanisme « DC + remplissages successifs » comme
+ * le legacy. L'équivalence est appliquée automatiquement aux autres fractions.
+ *
+ * Cf. legacy `droppableFrac` ([application.coffee:828-845](../../legacy/js/application.coffee#L828-L845)).
+ */
+export function canFillHole(
+  state: GameState,
+  piocheFractionId: EntityId,
+  holeCardId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  const pLoc = locateFraction(state, piocheFractionId);
+  if (!pLoc || pLoc.side !== "pioche") return false;
+  const hLoc = locateCard(state, holeCardId);
+  if (!hLoc || hLoc.side === "pioche") return false;
+  const frac = state[hLoc.side][hLoc.fractionIdx]!;
+  const list = hLoc.where === "numerator" ? frac.numerator : frac.denominator;
+  return list?.[hLoc.cardIdx]?.atom.kind === "hole";
+}
+
+export function fillHole(
+  state: GameState,
+  piocheFractionId: EntityId,
+  holeCardId: EntityId,
+  opts: { dropOnce: boolean },
+): GameState {
+  ensureNotPending(state, "fillHole");
+  if (!canFillHole(state, piocheFractionId, holeCardId)) {
+    throw new Error("fillHole illégale");
+  }
+  const pLoc = locateFraction(state, piocheFractionId)!;
+  const hLoc = locateCard(state, holeCardId)!;
+  const piocheFrac = state.pioche[pLoc.fractionIdx]!;
+  const atoms = piocheFrac.numerator.map((c) => c.atom);
+  const where = hLoc.where;
+  const ids = makeIdSource(`fh_`);
+
+  const fillTarget = (f: FractionInstance): FractionInstance => {
+    const list = where === "numerator" ? f.numerator : (f.denominator ?? []);
+    const replacements = atoms.map((a) => ({ id: ids.next(), atom: a }));
+    const newList = [
+      ...list.slice(0, hLoc.cardIdx),
+      ...replacements,
+      ...list.slice(hLoc.cardIdx + 1),
+    ];
+    return where === "numerator"
+      ? { ...f, numerator: newList }
+      : { ...f, denominator: newList.length > 0 ? newList : undefined };
+  };
+
+  const appendToOther = (f: FractionInstance): FractionInstance => {
+    const list = where === "numerator" ? f.numerator : (f.denominator ?? []);
+    const additions = atoms.map((a) => ({ id: ids.next(), atom: a }));
+    const newList = [...list, ...additions];
+    return where === "numerator"
+      ? { ...f, numerator: newList }
+      : { ...f, denominator: newList };
+  };
+
+  const transformSide = (side: "lhs" | "rhs"): FractionInstance[] =>
+    state[side].map((f, fi) =>
+      side === hLoc.side && fi === hLoc.fractionIdx ? fillTarget(f) : appendToOther(f),
+    );
+
+  return {
+    ...state,
+    lhs: transformSide("lhs"),
+    rhs: transformSide("rhs"),
+    pioche: opts.dropOnce ? removeAt(state.pioche, pLoc.fractionIdx) : state.pioche,
+  };
+}
+
 /* ─── 8. Simplification de fraction : numérateur / dénominateur identiques ─ */
 
 /**
