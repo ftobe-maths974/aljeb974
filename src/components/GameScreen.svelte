@@ -104,7 +104,7 @@
       </div>
     {/if}
 
-    {#if game.solved}
+    {#if game.victoryReady}
       <VictoryOverlay
         stars={game.starsEarned}
         shots={game.state.shots}

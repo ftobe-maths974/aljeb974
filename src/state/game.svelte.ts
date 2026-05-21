@@ -61,6 +61,15 @@ class GameStore {
   isPending = $derived(this.state?.pending != null);
 
   /**
+   * Décalage entre la résolution effective et l'affichage du Victory overlay,
+   * pour laisser les animations (vapeur, etc.) se terminer avant d'arrêter le jeu.
+   */
+  victoryReady = $state(false);
+  private victoryTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Délai (ms) entre `solved=true` et `victoryReady=true`. */
+  private static VICTORY_DELAY_MS = 1200;
+
+  /**
    * Flash alert : id de la fraction qui doit être déposée (= la pioche).
    * Set quand l'élève fait une action interdite en block mode.
    */
@@ -82,7 +91,29 @@ class GameStore {
     this.level = level;
     const lvl = findLevel(chapter, level);
     this.state = initialState(lvl, `${chapter}-${level}`);
+    if (this.victoryTimer) {
+      clearTimeout(this.victoryTimer);
+      this.victoryTimer = null;
+    }
+    this.victoryReady = false;
     astuce.startForLevel(`${chapter}-${level}`);
+  }
+
+  /**
+   * Met à jour l'état et déclenche le compte à rebours d'affichage de la
+   * victoire si l'opération vient de résoudre le niveau. Toutes les mutations
+   * de `this.state` passent par ici.
+   */
+  private applyState(newState: GameState) {
+    const wasSolved = this.state ? isSolved(this.state) : false;
+    this.state = newState;
+    if (!wasSolved && isSolved(newState)) {
+      if (this.victoryTimer) clearTimeout(this.victoryTimer);
+      this.victoryReady = false;
+      this.victoryTimer = setTimeout(() => {
+        this.victoryReady = true;
+      }, GameStore.VICTORY_DELAY_MS);
+    }
   }
 
   /** Re-lance le niveau courant. */
@@ -96,7 +127,7 @@ class GameStore {
       this.flashAlert();
       return;
     }
-    this.state = deleteZero(this.state, cardId);
+    this.applyState(deleteZero(this.state, cardId));
   }
 
   deleteOne(cardId: string) {
@@ -105,13 +136,13 @@ class GameStore {
       this.flashAlert();
       return;
     }
-    this.state = deleteOne(this.state, cardId);
+    this.applyState(deleteOne(this.state, cardId));
   }
 
   /** Annule un drop partiel et restaure l'état précédent. */
   cancelPending() {
     if (!this.state) return;
-    this.state = cancelPending(this.state);
+    this.applyState(cancelPending(this.state));
   }
 
   reverseInPioche(cardId: string) {
@@ -121,7 +152,7 @@ class GameStore {
       return;
     }
     if (!canReverseInPioche(this.state, cardId)) return;
-    this.state = reverseInPioche(this.state, cardId);
+    this.applyState(reverseInPioche(this.state, cardId));
   }
 
   /**
@@ -142,9 +173,9 @@ class GameStore {
         target.side &&
         this.state.pending.remainingTargets.includes(target.side)
       ) {
-        this.state = completePiocheDrop(this.state, target.side, {
+        this.applyState(completePiocheDrop(this.state, target.side, {
           dropOnce: this.caps.dropOnce,
-        });
+        }));
         return true;
       }
       // Drop interdit : on lève une alerte
@@ -155,7 +186,7 @@ class GameStore {
     // ─── Mode normal ────────────────────────────────────────────────────────
     // 1. Source de la pioche + cible un côté → première étape du drop équivalence
     if (src.side === "pioche" && (target.side === "lhs" || target.side === "rhs")) {
-      this.state = startPiocheDrop(this.state, sourceFractionId, target.side);
+      this.applyState(startPiocheDrop(this.state, sourceFractionId, target.side));
       return true;
     }
 
@@ -167,7 +198,7 @@ class GameStore {
         src.side === tgt.side &&
         canCancelOpposites(this.state, sourceFractionId, target.fractionId)
       ) {
-        this.state = cancelOpposites(this.state, sourceFractionId, target.fractionId);
+        this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
         return true;
       }
     }
@@ -180,7 +211,7 @@ class GameStore {
       src.side !== target.side &&
       canMoveAcross(this.state, sourceFractionId)
     ) {
-      this.state = moveAcross(this.state, sourceFractionId);
+      this.applyState(moveAcross(this.state, sourceFractionId));
       return true;
     }
 
