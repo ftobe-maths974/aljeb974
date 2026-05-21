@@ -59,8 +59,10 @@
         /* ignoré */
       }
     } else if (isOne(card.atom)) {
-      // Aucun effet visuel ni slogan : le « 1 » multiplicatif n'a pas de
-      // superpower, il disparaît simplement.
+      // Le « 1 » multiplicatif est un superpower introduit au niveau 2-5.
+      // Avant : suppression silencieuse. À partir de 2-5 : pouf + slogan.
+      const unlocked = game.chapter > 2 || (game.chapter === 2 && game.level >= 5);
+      if (unlocked) fx.spawnPuffOnCard(cardId, t().fx.oneNoChange);
       try {
         game.deleteOne(cardId);
       } catch {

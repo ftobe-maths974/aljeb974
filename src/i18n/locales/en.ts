@@ -68,7 +68,7 @@ export const en: Messages = {
 
   fx: {
     zeroNothing: "Zero is nothing!",
-    oneNoChange: "One changes nothing!",
+    oneNoChange: "×1 changes nothing!",
     oppositesCancel: "Opposites cancel out!",
     balanceRestored: "Balance restored!",
     takeOpposite: "I want the opposite!",

@@ -73,7 +73,7 @@ export const fr = {
 
   fx: {
     zeroNothing: "Zéro c'est rien !",
-    oneNoChange: "Un, ça change rien !",
+    oneNoChange: "×1 ne change rien !",
     oppositesCancel: "Les opposés s'annulent !",
     balanceRestored: "J'équilibre la balance !",
     takeOpposite: "Je veux l'opposé !",
