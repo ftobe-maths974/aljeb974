@@ -36,7 +36,7 @@
   }
 
   function rowText(cards: CardInstance[]): string {
-    return cards.map((c) => atomLabel(c.atom)).join(" · ");
+    return cards.map((c) => atomLabel(c.atom)).join(" × ");
   }
 </script>
 

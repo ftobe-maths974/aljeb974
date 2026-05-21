@@ -37,7 +37,7 @@
   <div class="row numerator" data-region="numerator">
     {#each fraction.numerator as card (card.id)}
       {#if card !== fraction.numerator[0]}
-        <span class="mult-dot" aria-hidden="true">·</span>
+        <span class="mult-dot" aria-hidden="true">×</span>
       {/if}
       <Card {card} onclick={onCardClick} />
     {/each}
@@ -46,7 +46,7 @@
     <div class="row denominator" data-region="denominator">
       {#each fraction.denominator! as card (card.id)}
         {#if card !== fraction.denominator![0]}
-          <span class="mult-dot" aria-hidden="true">·</span>
+          <span class="mult-dot" aria-hidden="true">×</span>
         {/if}
         <!-- Carte de dénominateur : draggable individuellement pour la
              simplification num/dén (e.g. p/p → 1). -->
