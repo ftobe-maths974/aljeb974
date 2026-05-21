@@ -199,9 +199,13 @@ class GameStore {
         src.side === tgt.side &&
         canCancelOpposites(this.state, sourceFractionId, target.fractionId)
       ) {
-        // Pouf à l'endroit où le « 0 » va apparaître (la fraction cible).
-        fx.spawnPuffOnFraction(target.fractionId);
+        // Le 0 va apparaître à la place de la cible (l'id de la fraction est
+        // préservé), mais le layout flex se réaligne après la suppression du
+        // dragué. On attend donc une frame pour spawn le pouf à la position
+        // finale du 0, pas à sa position pré-réalignement.
+        const targetFractionId = target.fractionId;
         this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
+        requestAnimationFrame(() => fx.spawnPuffOnFraction(targetFractionId));
         return true;
       }
     }
