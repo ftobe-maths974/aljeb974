@@ -44,6 +44,7 @@
     const card = list[loc.cardIdx]!;
     // Pioche + reversePower : un clic inverse le signe (niveau 1-16+).
     if (loc.side === "pioche" && game.caps.reversePower) {
+      fx.spawnPuffOnCard(cardId, t().fx.takeOpposite);
       game.reverseInPioche(cardId);
       return;
     }

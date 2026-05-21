@@ -76,14 +76,15 @@ export const fr = {
     oneNoChange: "Un, ça change rien !",
     oppositesCancel: "Les opposés s'annulent !",
     balanceRestored: "J'équilibre la balance !",
+    takeOpposite: "Je veux l'opposé !",
   },
 
   keyLevels: {
     "1-1":  { title: "Le zéro",            hint: "Le zéro, c'est rien du tout. Touche-le, il s'envole en fumée !" },
-    "1-3":  { title: "Les contraires",     hint: "Quand un truc rencontre son contraire, ils s'annulent et il reste… zéro !" },
+    "1-3":  { title: "Les opposés",        hint: "Quand un truc rencontre son opposé, ils s'annulent et il reste… zéro !" },
     "1-5":  { title: "La balance Équation", hint: "Le = est comme une balance : les plateaux sont en équilibre. Le but du jeu : peser x !" },
     "1-9":  { title: "La pioche",          hint: "Glisse une carte de la pioche pour la poser. Mais attention : ajoute-la sur les DEUX côtés pour garder l'équilibre." },
-    "1-16": { title: "Changer le signe",   hint: "Touche une carte de la pioche pour changer son signe. Plus devient moins, et moins devient plus !" },
+    "1-16": { title: "Prendre l'opposé",   hint: "Touche une carte de la pioche pour changer son signe. Plus devient moins, et moins devient plus !" },
     "2-1":  { title: "Les fractions",      hint: "Quand la même chose est en haut et en bas d'une fraction, glisse-les l'une sur l'autre : elles se transforment en 1 !" },
     "2-5":  { title: "Multiplier par 1",   hint: "Multiplier par 1 ne change rien. Tu peux faire disparaître les 1 inutiles d'un coup de doigt." },
     "2-11": { title: "Le slot vide",       hint: "Tu vois le carré pointillé en bas d'une fraction ? Glisse une carte dedans pour la multiplier." },

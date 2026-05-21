@@ -71,6 +71,7 @@ export const en: Messages = {
     oneNoChange: "One changes nothing!",
     oppositesCancel: "Opposites cancel out!",
     balanceRestored: "Balance restored!",
+    takeOpposite: "I want the opposite!",
   },
 
   keyLevels: {
@@ -78,7 +79,7 @@ export const en: Messages = {
     "1-3":  { title: "Opposites",     hint: "When something meets its opposite, they cancel and leave… zero!" },
     "1-5":  { title: "The balance equation", hint: "= is like a scale: both pans are in balance. Your goal: weigh x!" },
     "1-9":  { title: "The deck",      hint: "Drag a deck card to drop it. But careful: add it on BOTH sides to keep the balance." },
-    "1-16": { title: "Flip the sign", hint: "Tap a deck card to flip its sign. Plus becomes minus, minus becomes plus!" },
+    "1-16": { title: "Take the opposite", hint: "Tap a deck card to flip its sign. Plus becomes minus, minus becomes plus!" },
     "2-1":  { title: "Fractions",     hint: "When the same thing is at the top and bottom of a fraction, drag them onto each other: they turn into 1!" },
     "2-5":  { title: "Times one",     hint: "Multiplying by 1 doesn't change anything. Tap useless 1s to remove them." },
     "2-11": { title: "Empty slot",    hint: "See that dotted square below a fraction? Drag a card in to multiply." },
