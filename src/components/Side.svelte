@@ -89,9 +89,8 @@
     position: relative;
     display: flex;
     flex-wrap: wrap;
-    /* flex-end : cartes alignées en bas → tous les cards bottoms partagent
-       la même ligne, donc visuellement alignées entre lhs et rhs même quand
-       une fraction (p/p) prend plus de hauteur. */
+    /* flex-end : cartes alignées sur la même ligne basse (les fractions
+       s'étirent vers le haut, pas vers le bas, donc tout s'aligne). */
     align-items: flex-end;
     justify-content: center;
     gap: 0.25rem;
@@ -123,7 +122,7 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
   }
-  /* Plateau de balance : attaché en bas du membre, suit donc sa bascule */
+  /* Plateau de balance : attaché en bas du membre, suit donc sa bascule. */
   .platter {
     position: absolute;
     left: 0;

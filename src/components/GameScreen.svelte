@@ -153,8 +153,8 @@
   .play-area {
     flex: 1;
     display: flex;
-    /* flex-end : les bas des membres s'alignent → plateaux et pivot
-       sur une même ligne horizontale, comme une vraie balance. */
+    /* flex-end : tous les bas (cartes + plateaux + pivot) s'alignent sur
+       une même ligne horizontale, comme une vraie balance. */
     align-items: flex-end;
     justify-content: center;
     gap: 0.5rem;
