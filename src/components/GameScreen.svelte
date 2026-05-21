@@ -160,16 +160,16 @@
     justify-content: center;
   }
   /* Groupe-balance : les deux membres + le « = » + plateaux + pivot,
-     bottom-alignés ensemble pour partager la même ligne basse. */
+     bottom-alignés ensemble pour partager la même ligne basse.
+     Aussi large que possible — juste un petit inset pour ne pas coller
+     aux bords de l'écran. */
   .balance-group {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    gap: 0.5rem;
-    /* Place pour les plateaux qui dépassent du bas (-14px sur le Side) +
-       pour la pointe du pivot (~24px sous l'equals). */
-    padding-bottom: 2.5rem;
-    max-width: 100%;
+    gap: 1rem;
+    width: 100%;
+    padding: 0 1.5rem 1rem;
   }
   .equals {
     font-size: 2.5rem;
