@@ -32,6 +32,14 @@ class FxStore {
     const r = el.getBoundingClientRect();
     this.spawnPuff(r.left + r.width / 2, r.top + r.height / 2);
   }
+
+  /** Helper : spawn une vapeur sur la fraction (utilisé quand un terme entier disparaît). */
+  spawnPuffOnFraction(fractionId: string) {
+    const el = document.querySelector<HTMLElement>(`[data-fraction-id="${fractionId}"]`);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    this.spawnPuff(r.left + r.width / 2, r.top + r.height / 2);
+  }
 }
 
 export const fx = new FxStore();

@@ -35,6 +35,7 @@ import {
 } from "../lib/engine/index.ts";
 import levelsData from "../../migration/levels.json";
 import { astuce } from "./astuce.svelte.ts";
+import { fx } from "./fx.svelte.ts";
 
 // ─── Lookup helper ──────────────────────────────────────────────────────────
 
@@ -198,6 +199,8 @@ class GameStore {
         src.side === tgt.side &&
         canCancelOpposites(this.state, sourceFractionId, target.fractionId)
       ) {
+        // Pouf à l'endroit de la fraction draguée AVANT qu'elle ne disparaisse.
+        fx.spawnPuffOnFraction(sourceFractionId);
         this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
         return true;
       }
