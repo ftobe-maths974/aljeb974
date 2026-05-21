@@ -28,7 +28,7 @@ class FxStore {
   private nextId = 1;
 
   /** Génère un petit nuage de vapeur centré sur (x, y) en page coords. */
-  spawnPuff(x: number, y: number, slogan?: string, sloganY?: number, durationMs = 1400) {
+  spawnPuff(x: number, y: number, slogan?: string, sloganY?: number, durationMs = 2200) {
     const id = this.nextId++;
     this.puffs = [...this.puffs, { id, x, y, slogan, sloganY }];
     setTimeout(() => {

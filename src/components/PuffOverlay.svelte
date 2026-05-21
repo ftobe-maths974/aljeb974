@@ -57,13 +57,16 @@
        l'opposé ! ») sont rendus comme des retours à la ligne. */
     white-space: pre-line;
     text-align: center;
-    animation: slogan-float 1400ms ease-out forwards;
+    animation: slogan-float 2200ms ease-out forwards;
   }
   @keyframes slogan-float {
+    /* Le slogan apparaît rapidement, reste plein de vie au centre,
+       puis s'éloigne lentement vers le haut en s'estompant. */
     0%   { opacity: 0; transform: translate(-50%, -80%) scale(0.7); }
-    20%  { opacity: 1; transform: translate(-50%, -100%) scale(1.15); }
-    35%  {             transform: translate(-50%, -105%) scale(1);    }
-    100% { opacity: 0; transform: translate(-50%, -150%) scale(1);   }
+    12%  { opacity: 1; transform: translate(-50%, -100%) scale(1.15); }
+    22%  {             transform: translate(-50%, -105%) scale(1);    }
+    70%  { opacity: 1; transform: translate(-50%, -110%) scale(1);   }
+    100% { opacity: 0; transform: translate(-50%, -160%) scale(1);   }
   }
 
   /* Cœur opaque au point d'origine — court mais bien visible */
