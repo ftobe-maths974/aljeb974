@@ -23,6 +23,10 @@
   const isCardHovered = $derived(
     !isGhost && drag.isCardDrag() && drag.hoverCardId === card.id,
   );
+  /** Trou « ! » survolé par un drag de fraction de pioche → highlight. */
+  const isHoleHovered = $derived(
+    !isGhost && drag.hoverHoleCardId === card.id,
+  );
   /** L'effet d'opacité ne s'applique qu'à la carte d'origine, pas au ghost. */
   const isBeingDragged = $derived(
     !isGhost &&
@@ -58,7 +62,9 @@
   }
 
   function displayText(a: Atom): string {
-    if (a.kind === "hole") return "?";
+    // Trou : on affiche « ! » (un coup à trouver, comme « !! » aux échecs).
+    // Le data-card-value reste « _ » pour les sélecteurs d'astuces.
+    if (a.kind === "hole") return "!";
     const prefix = a.sign === -1 ? "−" : "";
     if (a.kind === "unknown") return prefix + "x";
     if (a.kind === "literal") return prefix + a.value.toString();
@@ -82,6 +88,7 @@
   class:neg={isNeg}
   class:card-hovered={isCardHovered}
   class:card-dragging={isBeingDragged}
+  class:hole-hovered={isHoleHovered}
   data-card-id={card.id}
   data-card-value={dataValue}
   onclick={handle}
@@ -184,7 +191,17 @@
   .card.hole {
     background: transparent;
     border: 2px dashed rgba(255, 255, 255, 0.5);
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.55);
+    /* Le « ! » est en gras italique pour ressembler à une notation d'échec. */
+    font-weight: 900;
+  }
+  /* Survol par un drag de pioche : highlight orange. */
+  .card.hole.hole-hovered {
+    border-color: var(--accent);
+    background: rgba(245, 158, 11, 0.18);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent), 0 0 18px rgba(245, 158, 11, 0.6);
+    transform: scale(1.08);
   }
 
   /* Marqueur visuel pour les négatifs */

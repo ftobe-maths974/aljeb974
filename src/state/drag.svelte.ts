@@ -49,6 +49,8 @@ class DragStore {
   hoverFractionId = $state<string | null>(null);
   /** Carte survolée (highlight pendant un drag de carte). */
   hoverCardId = $state<string | null>(null);
+  /** Trou « _ » survolé pendant un drag de fraction de pioche. */
+  hoverHoleCardId = $state<string | null>(null);
   /** Côté survolé. */
   hoverSide = $state<"lhs" | "rhs" | null>(null);
 
@@ -247,6 +249,7 @@ function beginDrag(
       drag.state = null;
       drag.hoverFractionId = null;
       drag.hoverCardId = null;
+      drag.hoverHoleCardId = null;
       drag.hoverSide = null;
       // Le browser dispatche un click synthétique après pointerup. Sans
       // protection, le click se propage au composant qui appelle alors
@@ -275,6 +278,7 @@ function updateHoverForFraction(x: number, y: number, sourceFractionId: string) 
   const t = pickFractionTarget(x, y, sourceFractionId);
   drag.hoverFractionId = t?.fractionId ?? null;
   drag.hoverSide = t?.side ?? null;
+  drag.hoverHoleCardId = t?.holeCardId ?? null;
   drag.hoverCardId = null;
 }
 
