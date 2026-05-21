@@ -79,6 +79,12 @@
     z-index: 80;
     animation: solution-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
     max-width: 90vw;
+    /* Empile titre / équation / bouton en colonne pour que le bouton ne
+       finisse pas à côté de .equation (qui est inline-flex). */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
   }
   @keyframes solution-pop {
     0%   { transform: translate(-50%, 16px); opacity: 0; }
