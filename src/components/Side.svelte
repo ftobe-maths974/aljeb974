@@ -60,6 +60,37 @@
     (name === "lhs" || name === "rhs") &&
       (game.state?.rhs.length ?? 0) > 0,
   );
+
+  // Scale auto pour faire tenir le contenu sur une seule ligne (pas de wrap).
+  import { onMount } from "svelte";
+  let contentEl: HTMLDivElement | undefined = $state();
+  let scale = $state(1);
+  function recomputeScale() {
+    if (!contentEl) return;
+    const parent = contentEl.parentElement;
+    if (!parent) return;
+    // Largeur disponible = side width moins padding horizontal (2 × 0.75rem).
+    const avail = parent.clientWidth - parseFloat(getComputedStyle(parent).paddingLeft) * 2;
+    // Largeur naturelle du contenu (sans scale appliqué) :
+    contentEl.style.transform = "scale(1)";
+    const natural = contentEl.scrollWidth;
+    scale = natural > avail && natural > 0 ? Math.max(0.4, avail / natural) : 1;
+    contentEl.style.transform = `scale(${scale})`;
+  }
+  $effect(() => {
+    void game.state;
+    requestAnimationFrame(recomputeScale);
+  });
+  onMount(() => {
+    recomputeScale();
+    const ro = new ResizeObserver(recomputeScale);
+    if (contentEl?.parentElement) ro.observe(contentEl.parentElement);
+    window.addEventListener("resize", recomputeScale);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", recomputeScale);
+    };
+  });
 </script>
 
 <div
@@ -71,18 +102,21 @@
   data-side={name}
   style="transform: translateY({tilt}px);"
 >
-  {#each fractions as fraction, i (fraction.id)}
-    {#if i > 0 && name !== "pioche"}
-      <span class="plus" aria-hidden="true">+</span>
+  <!-- .content : ligne unique sans wrap, scalée pour tenir dans le side. -->
+  <div class="content" bind:this={contentEl}>
+    {#each fractions as fraction, i (fraction.id)}
+      {#if i > 0 && name !== "pioche"}
+        <span class="plus" aria-hidden="true">+</span>
+      {/if}
+      <Fraction {fraction} {onCardClick} {onCardDoubleClick} {onDrop} {onCardDrop} />
+    {/each}
+    {#if pendingTarget}
+      {#if fractions.length > 0}
+        <span class="plus" aria-hidden="true">+</span>
+      {/if}
+      <DropZone side={name as "lhs" | "rhs"} cardSummary={pendingSummary} />
     {/if}
-    <Fraction {fraction} {onCardClick} {onCardDoubleClick} {onDrop} {onCardDrop} />
-  {/each}
-  {#if pendingTarget}
-    {#if fractions.length > 0}
-      <span class="plus" aria-hidden="true">+</span>
-    {/if}
-    <DropZone side={name as "lhs" | "rhs"} cardSummary={pendingSummary} />
-  {/if}
+  </div>
   {#if showPlatter}
     <div class="platter" aria-hidden="true"></div>
   {/if}
@@ -92,23 +126,30 @@
   .side {
     position: relative;
     display: flex;
-    flex-wrap: wrap;
-    /* center : cartes et fractions partagent leur centre vertical
-       (les fractions s'étirent symétriquement autour, les cartes solitaires
-       sont au milieu). */
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
     padding: 0.75rem;
     border-radius: 0.75rem;
     background: var(--side-bg);
     border: 1px solid var(--side-border);
     min-height: 8rem;
+    overflow: hidden;
     /* Spring/ressort pour la bascule de la balance */
     transition:
       transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1),
       background 120ms, border-color 120ms, box-shadow 120ms;
     will-change: transform;
+  }
+  /* .content : ligne unique non-wrapée. Scalée par JS pour tenir dans le side. */
+  .content {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transform-origin: center center;
+    transition: transform 180ms ease-out;
+    white-space: nowrap;
   }
   .lhs, .rhs {
     flex: 1;

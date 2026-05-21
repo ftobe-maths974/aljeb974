@@ -90,7 +90,10 @@
   .fraction {
     display: inline-flex;
     flex-direction: column;
-    align-items: center;
+    /* stretch : les rangées (num/den) occupent toute la largeur de la
+       fraction (= la plus large des deux), pour que la barre de fraction
+       s'étire d'un bout à l'autre. */
+    align-items: stretch;
     gap: 0.25rem;
     padding: 0.5rem;
     border-radius: 0.5rem;
@@ -99,6 +102,7 @@
   .row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
   }
   .fraction.has-den .numerator {
