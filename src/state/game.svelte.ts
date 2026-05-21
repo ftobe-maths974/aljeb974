@@ -286,7 +286,17 @@ class GameStore {
       src.side !== target.side &&
       canMoveAcross(this.state, sourceFractionId)
     ) {
+      const targetSide = target.side;
       this.applyState(moveAcross(this.state, sourceFractionId));
+      // Pouf + slogan sur la carte qui vient de traverser (dernière du côté).
+      requestAnimationFrame(() => {
+        const after = this.state;
+        if (!after) return;
+        const arr = after[targetSide];
+        const newFrac = arr[arr.length - 1];
+        if (!newFrac) return;
+        fx.spawnPuffOnFraction(newFrac.id, t().fx.crossSign);
+      });
       return true;
     }
 

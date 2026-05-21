@@ -76,6 +76,7 @@ export const en: Messages = {
     balanceRestored: "Balance restored!",
     takeOpposite: "I want the opposite!",
     simplifyFraction: "Same up, same down: that's 1!",
+    crossSign: "I cross… and flip my sign!",
   },
 
   keyLevels: {

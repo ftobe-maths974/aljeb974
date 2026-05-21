@@ -81,6 +81,7 @@ export const fr = {
     balanceRestored: "J'équilibre la balance !",
     takeOpposite: "Je veux l'opposé !",
     simplifyFraction: "Pareil en haut, pareil en bas : ça fait 1 !",
+    crossSign: "Je traverse… et je change de signe !",
   },
 
   keyLevels: {
