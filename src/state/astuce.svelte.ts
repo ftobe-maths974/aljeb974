@@ -10,6 +10,7 @@
  */
 
 import { ASTUCES, type Astuce, type AstuceTarget, type AtomQuery, astuceSelector } from "../data/astuces.ts";
+import { onFirstInteraction } from "./firstInteraction.ts";
 
 export interface AstuceResolved {
   config: Astuce;
@@ -24,7 +25,7 @@ export interface AstuceResolved {
 class AstuceStore {
   state = $state<AstuceResolved | null>(null);
   private timer: ReturnType<typeof setInterval> | null = null;
-  private stopHandler: ((e: Event) => void) | null = null;
+  private unbindFirstInteraction: (() => void) | null = null;
 
   startForLevel(levelId: string) {
     this.stop();
@@ -56,8 +57,8 @@ class AstuceStore {
     }, 3000);
 
     // S'arrête à la première interaction (souris/touch) du joueur.
-    this.stopHandler = () => this.stop();
-    window.addEventListener("pointerdown", this.stopHandler, { once: true, passive: true });
+    // Capture phase pour shunter les stopPropagation des drags enfants.
+    this.unbindFirstInteraction = onFirstInteraction(() => this.stop());
   }
 
   private findElement(q: AtomQuery): HTMLElement | null {
@@ -76,10 +77,8 @@ class AstuceStore {
       clearInterval(this.timer);
       this.timer = null;
     }
-    if (this.stopHandler) {
-      window.removeEventListener("pointerdown", this.stopHandler);
-      this.stopHandler = null;
-    }
+    this.unbindFirstInteraction?.();
+    this.unbindFirstInteraction = null;
     this.state = null;
   }
 }

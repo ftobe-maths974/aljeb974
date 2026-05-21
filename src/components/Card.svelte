@@ -9,19 +9,25 @@
     /** Si défini, active le drag de carte (utilisé pour cartes du dénominateur). */
     parentFractionId,
     onCardDrop,
+    /** True quand cette instance est le ghost de drag (rendu dans DragGhost). */
+    isGhost = false,
   }: {
     card: CardInstance;
     onclick?: (cardId: string) => void;
     parentFractionId?: string;
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
+    isGhost?: boolean;
   } = $props();
 
   const isCardDragSource = $derived(parentFractionId !== undefined);
   const isCardHovered = $derived(
-    drag.isCardDrag() && drag.hoverCardId === card.id,
+    !isGhost && drag.isCardDrag() && drag.hoverCardId === card.id,
   );
+  /** L'effet d'opacité ne s'applique qu'à la carte d'origine, pas au ghost. */
   const isBeingDragged = $derived(
-    drag.state?.kind === "card" && drag.state.cardId === card.id,
+    !isGhost &&
+      drag.state?.kind === "card" &&
+      drag.state.cardId === card.id,
   );
 
   const text = $derived(displayText(card.atom));

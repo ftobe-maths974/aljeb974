@@ -129,15 +129,12 @@ export interface DraggableCardParams {
 export function draggableCard(node: HTMLElement, params: DraggableCardParams | null) {
   let current = params;
   let cleanup: (() => void) | null = null;
-  console.log("[draggableCard] attached, params:", params, "node:", node);
 
   function start(e: PointerEvent) {
-    console.log("[draggableCard] pointerdown, current:", current);
     if (!current) return; // inactif
     // CLÉ : on stoppe ici la propagation pour empêcher le `pointerdown` listener
     // de la Fraction parente de démarrer son propre drag. Cf. pattern « ninja ».
     e.stopPropagation();
-    console.log("[draggableCard] starting card drag for", current.cardId);
     const params = current;
     cleanup?.();
     cleanup = beginDrag(
@@ -214,7 +211,6 @@ function beginDrag(
         width: rect.width,
         height: rect.height,
       };
-      console.log("[beginDrag] drag.state set:", drag.state);
     }
     if (drag.state) {
       drag.state = { ...drag.state, x: ev.clientX, y: ev.clientY };
@@ -224,7 +220,6 @@ function beginDrag(
 
   function onUp(ev: PointerEvent) {
     cleanup();
-    console.log("[beginDrag] pointerup, started =", started);
     if (started) {
       drag.state = null;
       drag.hoverFractionId = null;

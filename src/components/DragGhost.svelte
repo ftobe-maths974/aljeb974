@@ -16,7 +16,6 @@
   const card = $derived.by(() => {
     if (drag.state?.kind !== "card" || !game.state) return null;
     const loc = locateCard(game.state, drag.state.cardId);
-    console.log("[DragGhost] card drag, cardId:", drag.state.cardId, "loc:", loc);
     if (!loc) return null;
     const list =
       loc.where === "numerator"
@@ -38,7 +37,7 @@
   </div>
 {:else if drag.state && drag.state.kind === "card" && card}
   <div class="ghost" style="transform: {transform}; width: {drag.state.width}px; height: {drag.state.height}px;">
-    <Card {card} />
+    <Card {card} isGhost />
   </div>
 {/if}
 
@@ -48,10 +47,15 @@
     top: 0;
     left: 0;
     z-index: 200;
-    pointer-events: none;
     will-change: transform;
     opacity: 0.92;
     filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+  }
+  /* `pointer-events: none` sur TOUS les descendants du ghost pour que les
+     elementsFromPoint() ne s'arrêtent pas dessus — sinon le drop ne trouve
+     jamais la carte cible située en-dessous du ghost. */
+  .ghost, .ghost :global(*) {
+    pointer-events: none !important;
   }
   .ghost :global(.fraction) {
     background: transparent !important;

@@ -9,10 +9,12 @@
   import { game } from "../state/game.svelte.ts";
   import { getKeyLevel, type KeyLevel } from "../data/key-levels.ts";
   import { t } from "../i18n/store.svelte.ts";
+  import { onFirstInteraction } from "../state/firstInteraction.ts";
+  import { seen } from "../state/seen.svelte.ts";
 
   let visible = $state(false);
   let current = $state<KeyLevel | null>(null);
-  let onceHandler: ((e: Event) => void) | null = null;
+  let unbind: (() => void) | null = null;
 
   const localized = $derived.by(() => {
     if (!current) return null;
@@ -20,31 +22,30 @@
     return entry ?? null;
   });
 
+  let currentId = $state<string | null>(null);
+
   function dismiss() {
     visible = false;
-    if (onceHandler) {
-      window.removeEventListener("pointerdown", onceHandler);
-      onceHandler = null;
-    }
+    unbind?.();
+    unbind = null;
+    if (currentId) seen.mark(currentId);
   }
 
-  // L'explication persiste jusqu'au premier geste du joueur — comportement
-  // équivalent aux astuces du legacy DragonBox-like.
+  // L'explication ne s'affiche qu'au PREMIER passage sur un niveau-clé,
+  // puis persiste jusqu'au 1ᵉʳ geste du joueur (comportement wideapp).
+  // Capture phase pour shunter les stopPropagation des drags enfants.
   $effect(() => {
     const id = `${game.chapter}-${game.level}`;
     void game.state;
     const lvl = getKeyLevel(id);
     dismiss();
-    if (lvl) {
+    if (lvl && !seen.has(id)) {
       current = lvl;
+      currentId = id;
       setTimeout(() => {
         visible = true;
-        onceHandler = () => dismiss();
-        // léger délai pour ne pas attraper le clic « entrer dans le niveau »
         setTimeout(() => {
-          if (onceHandler) {
-            window.addEventListener("pointerdown", onceHandler, { once: true, passive: true });
-          }
+          unbind = onFirstInteraction(dismiss);
         }, 300);
       }, 150);
     }
