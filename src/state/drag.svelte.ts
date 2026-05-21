@@ -60,34 +60,6 @@ class DragStore {
   }
 }
 
-/**
- * Le browser dispatche un événement `click` synthétique après un `pointerup`,
- * même quand un drag vient d'avoir lieu. Deux protections empilées :
- *
- * 1. Listener `click` document-level en CAPTURE one-shot qui avale le 1ᵉʳ
- *    click (idéal : aucun side-effect, aucun shot).
- * 2. Timestamp `dragEndedAt` : vérifié par `justDragged()`. Les handlers du
- *    composant Card/GameScreen peuvent l'interroger pour bailler — utile si
- *    Svelte 5 ne respecte pas `stopImmediatePropagation` (selon comment il
- *    branche `onclick={}` en interne).
- */
-let dragEndedAt = 0;
-const POST_DRAG_GRACE_MS = 120;
-
-export function justDragged(): boolean {
-  return performance.now() - dragEndedAt < POST_DRAG_GRACE_MS;
-}
-
-function suppressNextClick() {
-  dragEndedAt = performance.now();
-  const handler = (e: Event) => {
-    e.stopImmediatePropagation();
-    e.preventDefault();
-    document.removeEventListener("click", handler, true);
-  };
-  document.addEventListener("click", handler, true);
-  setTimeout(() => document.removeEventListener("click", handler, true), POST_DRAG_GRACE_MS);
-}
 
 export const drag = new DragStore();
 
@@ -254,8 +226,6 @@ function beginDrag(
       drag.hoverFractionId = null;
       drag.hoverCardId = null;
       drag.hoverSide = null;
-      // Empêche le click synthétique post-pointerup d'être comptabilisé.
-      suppressNextClick();
       onEnd(ev.clientX, ev.clientY);
     }
   }

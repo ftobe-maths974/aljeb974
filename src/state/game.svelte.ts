@@ -141,6 +141,20 @@ class GameStore {
     this.state = { ...this.state, shots: this.state.shots + 1 };
   }
 
+  /**
+   * Bonus accordé sur un drag&drop RÉUSSI : -1 coup. Comme le click synthétique
+   * post-pointerup en plus du drag fait normalement +2 (1 drag + 1 click), ce
+   * bonus ramène un drop réussi à un coût net de +1 (équivalent à un click).
+   * Les drops ratés gardent leur pénalité de +2.
+   */
+  recordSuccessBonus() {
+    if (!this.state) return;
+    this.state = {
+      ...this.state,
+      shots: Math.max(0, this.state.shots - 1),
+    };
+  }
+
   /** Re-lance le niveau courant. */
   restart() {
     this.loadLevel(this.chapter, this.level);
@@ -204,6 +218,7 @@ class GameStore {
         this.applyState(completePiocheDrop(this.state, target.side, {
           dropOnce: this.caps.dropOnce,
         }));
+        this.recordSuccessBonus();
         if (willBalance) {
           // Le pouf doit apparaître sur la carte qui vient d'être posée
           // (= la dernière fraction du côté cible), pas au centre du membre.
@@ -228,6 +243,7 @@ class GameStore {
     // 1. Source de la pioche + cible un côté → première étape du drop équivalence
     if (src.side === "pioche" && (target.side === "lhs" || target.side === "rhs")) {
       this.applyState(startPiocheDrop(this.state, sourceFractionId, target.side));
+      this.recordSuccessBonus();
       return true;
     }
 
@@ -245,6 +261,7 @@ class GameStore {
         // finale du 0, pas à sa position pré-réalignement.
         const targetFractionId = target.fractionId;
         this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
+        this.recordSuccessBonus();
         requestAnimationFrame(() =>
           fx.spawnPuffOnFraction(targetFractionId, t().fx.oppositesCancel),
         );
@@ -261,6 +278,7 @@ class GameStore {
       canMoveAcross(this.state, sourceFractionId)
     ) {
       this.applyState(moveAcross(this.state, sourceFractionId));
+      this.recordSuccessBonus();
       return true;
     }
 
@@ -283,6 +301,7 @@ class GameStore {
     // Pouf à l'endroit de la carte cible (qui devient « 1 »).
     fx.spawnPuffOnCard(targetCardId, t().fx.simplifyFraction);
     this.applyState(simplifyFraction(this.state, sourceCardId, targetCardId));
+    this.recordSuccessBonus();
     return true;
   }
 }
