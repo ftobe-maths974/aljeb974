@@ -153,9 +153,12 @@
   .play-area {
     flex: 1;
     display: flex;
-    align-items: center;
+    /* flex-end : les bas des membres s'alignent → plateaux et pivot
+       sur une même ligne horizontale, comme une vraie balance. */
+    align-items: flex-end;
     justify-content: center;
     gap: 0.5rem;
+    padding-bottom: 1.5rem;
   }
   .equals {
     font-size: 2.5rem;

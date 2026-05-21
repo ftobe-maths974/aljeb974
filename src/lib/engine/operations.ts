@@ -15,7 +15,7 @@
  *    de base ne refusent que sur la logique du jeu, pas sur les powers.
  */
 
-import { atomsOpposite, flipSign, isZero, isOne, literalValue, fromLiteral } from "./atoms.ts";
+import { atomsEqual, atomsOpposite, flipSign, isZero, isOne, literalValue, fromLiteral } from "./atoms.ts";
 import type { Atom, Term } from "./dsl.ts";
 import type { EntityId, FractionInstance, GameState, Side } from "./state.ts";
 import { locateCard, locateFraction, makeIdSource } from "./state.ts";
@@ -434,6 +434,68 @@ export function canAddLiterals(
   if (tFrac.numerator.length !== 1 || tFrac.denominator) return false;
   return dFrac.numerator[0]!.atom.kind === "literal" && tFrac.numerator[0]!.atom.kind === "literal";
 }
+
+/* ─── 8. Simplification de fraction : numérateur / dénominateur identiques ─ */
+
+/**
+ * Glisser une carte de DÉNOMINATEUR sur une carte de NUMÉRATEUR (ou l'inverse)
+ * de la MÊME fraction, avec la même valeur d'atome → la cible (numérateur)
+ * devient « 1 », la draguée (dénominateur) disparaît. Si le dénominateur
+ * devient vide, le champ `denominator` est retiré.
+ *
+ * C'est la simplification `p/p = 1` enseignée au niveau 2-1.
+ * Cf. legacy `droppableFracSimplify` ([application.coffee:850-870](../../legacy/js/application.coffee#L850-L870)).
+ */
+export function canSimplifyFraction(
+  state: GameState,
+  sourceCardId: EntityId,
+  targetCardId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  if (sourceCardId === targetCardId) return false;
+  const sLoc = locateCard(state, sourceCardId);
+  const tLoc = locateCard(state, targetCardId);
+  if (!sLoc || !tLoc) return false;
+  if (sLoc.side === "pioche" || tLoc.side === "pioche") return false;
+  if (sLoc.side !== tLoc.side || sLoc.fractionIdx !== tLoc.fractionIdx) return false;
+  if (sLoc.where === tLoc.where) return false; // un dans num, l'autre dans dén
+  const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  const sList = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
+  const tList = tLoc.where === "numerator" ? frac.numerator : frac.denominator!;
+  return atomsEqual(sList[sLoc.cardIdx]!.atom, tList[tLoc.cardIdx]!.atom);
+}
+
+export function simplifyFraction(
+  state: GameState,
+  sourceCardId: EntityId,
+  targetCardId: EntityId,
+): GameState {
+  ensureNotPending(state, "simplifyFraction");
+  if (!canSimplifyFraction(state, sourceCardId, targetCardId)) {
+    throw new Error("simplifyFraction illégale");
+  }
+  const sLoc = locateCard(state, sourceCardId)!;
+  const tLoc = locateCard(state, targetCardId)!;
+  const ids = makeIdSource(`sf${state.shots + 1}_`);
+  const next = { ...state, shots: state.shots + 1 };
+  return updateSide(next, sLoc.side, (fs) => {
+    const frac = fs[sLoc.fractionIdx]!;
+    const numIdx = sLoc.where === "numerator" ? sLoc.cardIdx : tLoc.cardIdx;
+    const denIdx = sLoc.where === "denominator" ? sLoc.cardIdx : tLoc.cardIdx;
+    // Le numérateur cible devient « 1 » (on garde l'id pour la stabilité visuelle)
+    const numCard = frac.numerator[numIdx]!;
+    const newNum = replaceAt(frac.numerator, numIdx, { id: numCard.id, atom: fromLiteral(1) });
+    // Le dénominateur source disparaît
+    const newDen = removeAt(frac.denominator!, denIdx);
+    return replaceAt(fs, sLoc.fractionIdx, {
+      ...frac,
+      numerator: newNum,
+      denominator: newDen.length === 0 ? undefined : newDen,
+    });
+  });
+}
+
+/* ─── 9. Addition de deux littéraux (addPower, chap. 4+) ───────────────────── */
 
 export function addLiterals(
   state: GameState,

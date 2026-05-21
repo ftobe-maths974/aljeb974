@@ -89,7 +89,10 @@
     position: relative;
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    /* flex-end : cartes alignées en bas → tous les cards bottoms partagent
+       la même ligne, donc visuellement alignées entre lhs et rhs même quand
+       une fraction (p/p) prend plus de hauteur. */
+    align-items: flex-end;
     justify-content: center;
     gap: 0.25rem;
     padding: 0.75rem;
