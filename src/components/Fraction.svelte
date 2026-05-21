@@ -2,6 +2,7 @@
   import type { FractionInstance } from "../lib/engine/index.ts";
   import Card from "./Card.svelte";
   import { drag, draggable } from "../state/drag.svelte.ts";
+  import { game } from "../state/game.svelte.ts";
 
   let {
     fraction,
@@ -23,6 +24,13 @@
   const isDragging = $derived(
     drag.state?.kind === "fraction" && drag.state.fractionId === fraction.id,
   );
+  /**
+   * Drag intra-fraction sur les cartes du NUMÉRATEUR : activé dès que
+   * multPower ou negPower est débloqué (chap. 4-8 et 5-1).
+   * Le drag intra-fraction sur les DÉNOMINATEURS reste toujours actif
+   * (simplification num/dén disponible dès chap. 2).
+   */
+  const numDraggable = $derived(game.caps.multPower || game.caps.negPower);
 </script>
 
 <div
@@ -41,7 +49,13 @@
       {#if card !== fraction.numerator[0]}
         <span class="mult-dot" aria-hidden="true">×</span>
       {/if}
-      <Card {card} onclick={onCardClick} ondblclick={onCardDoubleClick} />
+      <Card
+        {card}
+        onclick={onCardClick}
+        ondblclick={onCardDoubleClick}
+        parentFractionId={numDraggable ? fraction.id : undefined}
+        onCardDrop={numDraggable ? onCardDrop : undefined}
+      />
     {/each}
   </div>
   {#if hasDen}
