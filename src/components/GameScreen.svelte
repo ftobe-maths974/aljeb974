@@ -161,17 +161,22 @@
     align-items: center;
     justify-content: center;
   }
-  /* Groupe-balance : les deux membres + le « = » + plateaux + pivot,
-     bottom-alignés ensemble pour partager la même ligne basse.
-     Aussi large que possible — juste un petit inset pour ne pas coller
-     aux bords de l'écran. */
+  /* Groupe-balance : les deux membres + le « = » + le pivot.
+     - `align-items: stretch` → les deux .side ont EXACTEMENT la même hauteur
+       (la plus grande des deux contenus dicte). Bottoms alignés naturellement.
+     - `.equals` a son propre `align-self: center` → l'égal reste au milieu
+       vertical, entre les deux membres.
+     - `.lhs/.rhs { flex: 1 1 0 }` → largeurs strictement égales. */
   .balance-group {
     display: flex;
-    align-items: flex-end;
+    align-items: stretch;
     justify-content: center;
     gap: 1rem;
     width: 100%;
     padding: 0 1.5rem 1rem;
+  }
+  .balance-group :global(.equals) {
+    align-self: center;
   }
   .equals {
     font-size: 2.5rem;

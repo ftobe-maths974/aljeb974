@@ -1,19 +1,16 @@
 <script lang="ts">
   /**
-   * Solution — affiché après résolution d'un niveau à équation (rhs présent).
+   * Solution — affichée après résolution d'un niveau à équation (rhs présent).
    *
-   * Montre « x = … » dérivé du côté qui ne contient pas x, et un bouton
-   * « Voir mes étoiles » qui déclenche l'overlay de récompenses.
-   *
-   * Format : on rend la valeur avec serializeTerm sur chaque terme, joint
-   * par des « + » (les signes négatifs internes sont déjà encodés par
-   * l'opérateur unaire dans le DSL — ex: « -t » s'affiche tel quel).
+   * Montre « x = … » avec la valeur rendue en style LaTeX (fractions empilées
+   * verticalement). Un bouton « Voir mes étoiles » déclenche l'overlay de
+   * récompenses (game.confirmVictory).
    */
   import { game } from "../state/game.svelte.ts";
-  import { serializeTerm, type FractionInstance } from "../lib/engine/index.ts";
+  import type { Atom, CardInstance, FractionInstance } from "../lib/engine/index.ts";
   import { t } from "../i18n/store.svelte.ts";
 
-  /** Renvoie le côté qui CONTIENT la valeur de x (donc PAS le côté où x est isolé). */
+  /** Renvoie le côté qui CONTIENT la valeur de x (PAS le côté où x est isolé). */
   function findValueSide(): FractionInstance[] | null {
     const s = game.state;
     if (!s) return null;
@@ -28,29 +25,40 @@
     return null;
   }
 
-  const valueText = $derived.by(() => {
-    const side = findValueSide();
-    if (!side || side.length === 0) return "?";
-    return side
-      .map((f) =>
-        serializeTerm({
-          numerator: f.numerator.map((c) => c.atom),
-          denominator: f.denominator?.map((c) => c.atom),
-        }),
-      )
-      // Joindre par + ; transforme « + -X » en « − X » pour la lecture
-      .join(" + ")
-      .replace(/\s\+\s-/g, " − ");
-  });
+  const valueSide = $derived(findValueSide() ?? []);
+
+  function atomLabel(a: Atom): string {
+    const prefix = a.sign === -1 ? "−" : "";
+    if (a.kind === "unknown") return prefix + "x";
+    if (a.kind === "hole") return prefix + "?";
+    if (a.kind === "literal") return prefix + a.value;
+    return prefix + a.letter;
+  }
+
+  function rowText(cards: CardInstance[]): string {
+    return cards.map((c) => atomLabel(c.atom)).join(" · ");
+  }
 </script>
 
 <div class="solution" role="dialog" aria-live="polite">
   <p class="title">{t().solution.title}</p>
-  <p class="equation">
+  <div class="equation">
     <span class="x">x</span>
     <span class="equals">=</span>
-    <span class="value">{valueText}</span>
-  </p>
+    <span class="value">
+      {#each valueSide as f, i (f.id)}
+        {#if i > 0}<span class="plus">+</span>{/if}
+        {#if f.denominator && f.denominator.length > 0}
+          <span class="frac">
+            <span class="num">{rowText(f.numerator)}</span>
+            <span class="den">{rowText(f.denominator)}</span>
+          </span>
+        {:else}
+          <span class="single">{rowText(f.numerator)}</span>
+        {/if}
+      {/each}
+    </span>
+  </div>
   <button class="confirm" onclick={() => game.confirmVictory()}>
     {t().solution.confirm}
   </button>
@@ -84,7 +92,7 @@
     letter-spacing: 0.02em;
   }
   .equation {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
@@ -105,12 +113,40 @@
     color: var(--fg);
     opacity: 0.85;
   }
+  /* Rendu LaTeX de la valeur */
   .value {
-    font-size: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     color: var(--fg);
-    padding: 0.1rem 0.5rem;
-    border-radius: 0.35rem;
+  }
+  .single {
+    font-size: 1.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.3rem;
     background: rgba(255, 255, 255, 0.06);
+  }
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.3rem;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 1.3rem;
+  }
+  .frac .num {
+    border-bottom: 2px solid currentColor;
+    padding: 0 0.25rem 0.1rem;
+  }
+  .frac .den {
+    padding: 0.1rem 0.25rem 0;
+  }
+  .plus {
+    font-size: 1.5rem;
+    opacity: 0.7;
+    font-style: normal;
   }
   .confirm {
     background: var(--accent);
