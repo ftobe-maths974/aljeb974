@@ -479,7 +479,7 @@ export function fillHole(
   const piocheFrac = state.pioche[pLoc.fractionIdx]!;
   const atoms = piocheFrac.numerator.map((c) => c.atom);
   const where = hLoc.where;
-  const ids = makeIdSource(`fh_`);
+  const ids = makeIdSource(`fh${state.shots + 1}_`);
 
   const fillTarget = (f: FractionInstance): FractionInstance => {
     const list = where === "numerator" ? f.numerator : (f.denominator ?? []);
@@ -516,6 +516,49 @@ export function fillHole(
   };
 }
 
+/* ─── 7.6. Multiplier toutes les fractions par une carte (drop au numérateur) ─ */
+
+/**
+ * Drop d'une carte de pioche sur la zone numérateur d'une fraction →
+ * ajoute cette carte au NUMÉRATEUR de chaque fraction des deux membres.
+ * Équivalent à multiplier par la carte des deux côtés.
+ */
+export function canMultiplyAllNum(
+  state: GameState,
+  piocheFractionId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  const loc = locateFraction(state, piocheFractionId);
+  return loc !== null && loc.side === "pioche";
+}
+
+export function multiplyAllNum(
+  state: GameState,
+  piocheFractionId: EntityId,
+  opts: { dropOnce: boolean },
+): GameState {
+  ensureNotPending(state, "multiplyAllNum");
+  if (!canMultiplyAllNum(state, piocheFractionId)) {
+    throw new Error("multiplyAllNum illégale");
+  }
+  const pLoc = locateFraction(state, piocheFractionId)!;
+  const piocheFrac = state.pioche[pLoc.fractionIdx]!;
+  const atoms = piocheFrac.numerator.map((c) => c.atom);
+  const ids = makeIdSource(`mul${state.shots + 1}_`);
+
+  const appendNum = (f: FractionInstance): FractionInstance => {
+    const additions = atoms.map((a) => ({ id: ids.next(), atom: a }));
+    return { ...f, numerator: [...f.numerator, ...additions] };
+  };
+
+  return {
+    ...state,
+    lhs: state.lhs.map(appendNum),
+    rhs: state.rhs.map(appendNum),
+    pioche: opts.dropOnce ? removeAt(state.pioche, pLoc.fractionIdx) : state.pioche,
+  };
+}
+
 /* ─── 7.7. Diviser les deux membres par une carte (drop sous l'équation) ──── */
 
 /**
@@ -548,7 +591,7 @@ export function divideAll(
   const pLoc = locateFraction(state, piocheFractionId)!;
   const piocheFrac = state.pioche[pLoc.fractionIdx]!;
   const atoms = piocheFrac.numerator.map((c) => c.atom);
-  const ids = makeIdSource("div_");
+  const ids = makeIdSource(`div${state.shots + 1}_`);
 
   const appendDen = (f: FractionInstance): FractionInstance => {
     const existing = f.denominator ?? [];
@@ -756,7 +799,16 @@ function primeFactorize(n: number): number[] {
   return factors;
 }
 
-/** Cliquer (double-tap) sur un littéral > 3 le casse en facteurs premiers. */
+/**
+ * Cliquer (double-tap) sur une carte la décompose :
+ * - Littéral positif > 3        → facteurs premiers (ex: 6 → 2, 3).
+ * - Littéral négatif, |v| > 1   → -1 + facteurs premiers (ex: -6 → -1, 2, 3 ;
+ *                                 -2 → -1, 2).
+ * - Symbole / unknown négatif   → -1 + atome positif (ex: -t → -1, t ;
+ *                                 -x → -1, x). Permet d'isoler le signe
+ *                                 pour l'absorber via negPower.
+ * Cas exclus : 0, 1, -1 (atomiques) ; +t, +x (rien à extraire).
+ */
 export function canFactorize(state: GameState, cardId: EntityId): boolean {
   if (state.pending) return false;
   const loc = locateCard(state, cardId);
@@ -766,7 +818,14 @@ export function canFactorize(state: GameState, cardId: EntityId): boolean {
   const card = list?.[loc.cardIdx];
   if (!card) return false;
   const a = card.atom;
-  return a.kind === "literal" && a.sign === 1 && a.value > 3;
+  if (a.kind === "literal") {
+    if (a.sign === 1) return a.value > 3;
+    return a.value > 1; // négatif : -1 + facteurs (au moins 2 cartes)
+  }
+  // Symbole / unknown : décomposable ssi négatif (extraction du -1).
+  // hole : non décomposable.
+  if (a.kind === "symbol" || a.kind === "unknown") return a.sign === -1;
+  return false;
 }
 
 export function factorize(state: GameState, cardId: EntityId): GameState {
@@ -776,16 +835,30 @@ export function factorize(state: GameState, cardId: EntityId): GameState {
   const frac = state[loc.side][loc.fractionIdx]!;
   const list = loc.where === "numerator" ? frac.numerator : frac.denominator!;
   const card = list[loc.cardIdx]!;
-  const value = (card.atom as Extract<Atom, { kind: "literal" }>).value;
-  const factors = primeFactorize(value);
-  // Si pas de décomposition utile (déjà premier), ne change rien.
-  if (factors.length < 2) return state;
-
-  const ids = makeIdSource(`pf_`);
-  const replacements = factors.map((f) => ({
+  const atom = card.atom;
+  const ids = makeIdSource(`pf${state.shots + 1}_`);
+  const minusOne = () => ({
     id: ids.next(),
-    atom: { kind: "literal" as const, sign: 1 as const, value: f },
-  }));
+    atom: { kind: "literal" as const, sign: -1 as const, value: 1 },
+  });
+  let replacements: { id: string; atom: Atom }[];
+  if (atom.kind === "literal") {
+    const factors = primeFactorize(atom.value);
+    replacements = [
+      ...(atom.sign === -1 ? [minusOne()] : []),
+      ...factors.map((f) => ({
+        id: ids.next(),
+        atom: { kind: "literal" as const, sign: 1 as const, value: f },
+      })),
+    ];
+  } else {
+    // Symbole ou unknown négatif : -1 + atome rendu positif.
+    replacements = [
+      minusOne(),
+      { id: ids.next(), atom: { ...atom, sign: 1 as const } },
+    ];
+  }
+  if (replacements.length < 2) return state;
   const newList = [...list.slice(0, loc.cardIdx), ...replacements, ...list.slice(loc.cardIdx + 1)];
   const newFrac =
     loc.where === "numerator"

@@ -14,7 +14,7 @@
     fraction: FractionInstance;
     onCardClick?: (cardId: string) => void;
     onCardDoubleClick?: (cardId: string) => void;
-    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean }) => void;
+    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean; multiplyZone?: boolean }) => void;
     /** Callback pour un drag carte→carte (simplification num/dén). */
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();

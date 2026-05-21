@@ -18,7 +18,7 @@
     name: SideName;
     onCardClick?: (cardId: string) => void;
     onCardDoubleClick?: (cardId: string) => void;
-    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean }) => void;
+    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean; multiplyZone?: boolean }) => void;
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
 
@@ -133,14 +133,16 @@
     background: var(--side-bg);
     border: 1px solid var(--side-border);
     min-height: 8rem;
-    overflow: hidden;
     /* Spring/ressort pour la bascule de la balance */
     transition:
       transform 650ms cubic-bezier(0.34, 1.56, 0.64, 1),
       background 120ms, border-color 120ms, box-shadow 120ms;
     will-change: transform;
   }
-  /* .content : ligne unique non-wrapée. Scalée par JS pour tenir dans le side. */
+  /* .content : ligne unique non-wrapée. Scalée par JS pour tenir dans le side.
+     Pas d'overflow:hidden sur .side pour que .platter (bottom: -14px) reste
+     visible ; le transform:scale shrink visuellement le contenu pour qu'il
+     tienne dans .side même si sa largeur naturelle dépasse. */
   .content {
     display: flex;
     flex-wrap: nowrap;

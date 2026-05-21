@@ -88,6 +88,7 @@ export const fr = {
     factorize: "Je décompose !",
     negOne: "×(−1)\nc'est prendre l'opposé !",
     divideAll: "Je divise les deux côtés !",
+    multiplyAll: "Je multiplie les deux côtés !",
   },
 
   keyLevels: {

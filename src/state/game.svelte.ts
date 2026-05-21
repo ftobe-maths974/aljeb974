@@ -23,6 +23,8 @@ import {
   canAddLiterals,
   canApplyNegOne,
   canDivideAll,
+  canMultiplyAllNum,
+  multiplyAllNum,
   canFactorize,
   canFillHole,
   canMultiplyInFraction,
@@ -38,7 +40,6 @@ import {
   deleteZero,
   initialState,
   isSolved,
-  locateCard,
   locateFraction,
   moveAcross,
   reverseInPioche,
@@ -205,7 +206,7 @@ class GameStore {
    * Tente une action drag-drop fraction → fraction (annulation d'opposés, etc.)
    * ou fraction → côté (cross-side). Retourne true si une opération a été appliquée.
    */
-  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean }) {
+  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean; multiplyZone?: boolean }) {
     if (!this.state) return false;
     const src = locateFraction(this.state, sourceFractionId);
     if (!src) return false;
@@ -246,11 +247,34 @@ class GameStore {
     }
 
     // ─── Mode normal ────────────────────────────────────────────────────────
+    // -2. Source de la pioche + zone « au-dessus de l'équation » → multiplie
+    //     les deux membres par la carte (ajoute au numérateur de toute fraction).
+    if (
+      src.side === "pioche" &&
+      target.multiplyZone &&
+      this.caps.dropnumPower &&
+      canMultiplyAllNum(this.state, sourceFractionId)
+    ) {
+      this.applyState(
+        multiplyAllNum(this.state, sourceFractionId, { dropOnce: this.caps.dropOnce }),
+      );
+      requestAnimationFrame(() => {
+        const lhs = document.querySelector<HTMLElement>('[data-side="lhs"]')?.getBoundingClientRect();
+        const rhs = document.querySelector<HTMLElement>('[data-side="rhs"]')?.getBoundingClientRect();
+        if (lhs && rhs) {
+          const cx = (lhs.left + rhs.right) / 2;
+          const cy = Math.min(lhs.top, rhs.top) - 16;
+          fx.spawnPuff(cx, cy, t().fx.multiplyAll, cy - 40);
+        }
+      });
+      return true;
+    }
     // -1. Source de la pioche + zone « sous l'équation » → divise les deux
     //     membres par la carte (ajoute au dénominateur de toute fraction).
     if (
       src.side === "pioche" &&
       target.divideZone &&
+      this.caps.dropdenPower &&
       canDivideAll(this.state, sourceFractionId)
     ) {
       this.applyState(
@@ -404,7 +428,11 @@ class GameStore {
     return false;
   }
 
-  /** Double-clic sur un littéral > 3 → décomposition en facteurs premiers. */
+  /**
+   * Double-clic sur un littéral → décomposition en facteurs premiers.
+   * Gated uniquement par `primeFactorPower` : la même règle s'applique
+   * aux positifs (> 3) et aux négatifs (|v| > 1, avec un -1 séparé).
+   */
   tryFactorize(cardId: string): boolean {
     if (!this.state) return false;
     if (!this.caps.primeFactorPower) return false;

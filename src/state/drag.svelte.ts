@@ -53,6 +53,8 @@ class DragStore {
   hoverHoleCardId = $state<string | null>(null);
   /** True quand le pointeur est dans la zone « sous l'équation » (division). */
   hoverDivideZone = $state(false);
+  /** True quand le pointeur est dans la zone « au-dessus de l'équation » (multiplication). */
+  hoverMultiplyZone = $state(false);
   /** Côté survolé. */
   hoverSide = $state<"lhs" | "rhs" | null>(null);
 
@@ -91,6 +93,10 @@ export interface DropTarget {
   holeCardId?: string;
   /** True si le pointeur est dans la zone « sous l'équation » → division. */
   divideZone?: boolean;
+  /** True si le pointeur est dans la zone « au-dessus de l'équation » → multiplication. */
+  multiplyZone?: boolean;
+  /** Région survolée : « numerator » ou « denominator » d'une fraction (dropnumPower / dropdenPower). */
+  region?: "numerator" | "denominator";
 }
 
 export interface DraggableParams {
@@ -255,6 +261,7 @@ function beginDrag(
       drag.hoverCardId = null;
       drag.hoverHoleCardId = null;
       drag.hoverDivideZone = false;
+      drag.hoverMultiplyZone = false;
       drag.hoverSide = null;
       // Le browser dispatche un click synthétique après pointerup. Sans
       // protection, le click se propage au composant qui appelle alors
@@ -285,6 +292,7 @@ function updateHoverForFraction(x: number, y: number, sourceFractionId: string) 
   drag.hoverSide = t?.side ?? null;
   drag.hoverHoleCardId = t?.holeCardId ?? null;
   drag.hoverDivideZone = t?.divideZone ?? false;
+  drag.hoverMultiplyZone = t?.multiplyZone ?? false;
   drag.hoverCardId = null;
 }
 
@@ -297,13 +305,19 @@ function pickFractionTarget(
   let fractionId: string | undefined;
   let side: "lhs" | "rhs" | undefined;
   let holeCardId: string | undefined;
+  let region: "numerator" | "denominator" | undefined;
   let divideZone = false;
+  let multiplyZone = false;
   for (const el of elements) {
     if (!(el instanceof HTMLElement)) continue;
     if (!holeCardId) {
       const holeEl = el.closest<HTMLElement>('[data-card-value="_"]');
       const id = holeEl?.dataset.cardId;
       if (id) holeCardId = id;
+    }
+    if (!region) {
+      const r = el.closest<HTMLElement>("[data-region]")?.dataset.region;
+      if (r === "numerator" || r === "denominator") region = r;
     }
     if (!fractionId) {
       const fid = el.closest<HTMLElement>("[data-fraction-id]")?.dataset.fractionId;
@@ -313,19 +327,26 @@ function pickFractionTarget(
       const s = el.closest<HTMLElement>("[data-side]")?.dataset.side;
       if (s === "lhs" || s === "rhs") side = s;
     }
-    if (el.dataset.divideZone === "true") divideZone = true;
-    if (holeCardId && fractionId && side) break;
+    // closest pour matcher l'élément ET ses descendants (.sign, .hint…).
+    if (!divideZone && el.closest<HTMLElement>("[data-divide-zone]")) {
+      divideZone = true;
+    }
+    if (!multiplyZone && el.closest<HTMLElement>("[data-multiply-zone]")) {
+      multiplyZone = true;
+    }
+    if (holeCardId && fractionId && side && region && divideZone && multiplyZone) break;
   }
-  // Fallback : zone divisé détectée géométriquement (Y > bas des sides) — utile
-  // si le pointeur n'est pas exactement sur l'élément .divide-zone.
-  if (!divideZone && !side && !fractionId && !holeCardId) {
+  // Fallback géométrique : Y au-dessus / en dessous des sides.
+  if (!divideZone && !multiplyZone && !side && !fractionId && !holeCardId && !region) {
     const lhsRect = document.querySelector<HTMLElement>('[data-side="lhs"]')?.getBoundingClientRect();
     const rhsRect = document.querySelector<HTMLElement>('[data-side="rhs"]')?.getBoundingClientRect();
     const bottom = Math.max(lhsRect?.bottom ?? -Infinity, rhsRect?.bottom ?? -Infinity);
+    const top = Math.min(lhsRect?.top ?? Infinity, rhsRect?.top ?? Infinity);
     if (bottom > -Infinity && y > bottom + 8) divideZone = true;
+    else if (top < Infinity && y < top - 8) multiplyZone = true;
   }
-  if (!fractionId && !side && !holeCardId && !divideZone) return null;
-  return { fractionId, side, holeCardId, divideZone };
+  if (!fractionId && !side && !holeCardId && !divideZone && !multiplyZone && !region) return null;
+  return { fractionId, side, holeCardId, divideZone, multiplyZone, region };
 }
 
 function updateHoverForCard(x: number, y: number, sourceCardId: string, parentFractionId: string) {

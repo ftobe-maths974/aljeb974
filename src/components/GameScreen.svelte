@@ -11,6 +11,7 @@
   import PuffOverlay from "./PuffOverlay.svelte";
   import Solution from "./Solution.svelte";
   import DivideZone from "./DivideZone.svelte";
+  import MultiplyZone from "./MultiplyZone.svelte";
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
 
@@ -18,7 +19,7 @@
 
   function handleDrop(
     sourceFractionId: string,
-    target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean },
+    target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean; multiplyZone?: boolean },
   ) {
     // Chaque drag&drop compte comme un coup, succès ou échec.
     game.recordShot();
@@ -100,12 +101,15 @@
 </script>
 
 {#if game.state}
-  <div class="screen">
+  <div class="screen" style="--chapter-hue: {(game.chapter - 1) * 55};">
     <header class="topbar">
       <button class="back" onclick={onBack} aria-label={t().ui.backMenu}>{t().ui.backMenu}</button>
-      <span class="info">
-        {t().ui.levelHeader(game.chapter, game.level)} · {t().ui.coupsRecap(game.state.shots, game.state.shotsTarget)}
-      </span>
+      <div class="info">
+        <span class="chapter-badge" aria-hidden="true">{game.chapter}</span>
+        <span class="level-label">{t().ui.levelHeader(game.chapter, game.level)}</span>
+        <span class="dot" aria-hidden="true">·</span>
+        <span class="shots">{t().ui.coupsRecap(game.state.shots, game.state.shotsTarget)}</span>
+      </div>
       <button class="restart" onclick={() => game.restart()} aria-label={t().ui.restart}>{t().ui.restart}</button>
     </header>
 
@@ -115,6 +119,10 @@
         {#if game.state.rhs.length > 0}
           <span class="equals">=</span>
           <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onCardDoubleClick={handleCardDoubleClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
+        {/if}
+        {#if game.state.rhs.length > 0}
+          <MultiplyZone />
+          <DivideZone />
         {/if}
       </div>
     </main>
@@ -128,7 +136,6 @@
     {#if game.state.rhs.length > 0}
       <Balance />
     {/if}
-    <DivideZone />
 
     <DragGhost />
     <FlashAlert />
@@ -163,27 +170,84 @@
     flex-direction: column;
     padding: 0.5rem;
     gap: 0.5rem;
+    /* relative pour que les enfants en position absolute (DivideZone,
+       Solution, FlashAlert ancrés ici, etc.) se référencent au screen. */
+    position: relative;
   }
   .topbar {
+    --hue: var(--chapter-hue, 35);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.85rem;
+    border: 1px solid hsla(var(--hue), 60%, 70%, 0.18);
+    background:
+      linear-gradient(
+        135deg,
+        hsla(var(--hue), 70%, 60%, 0.1) 0%,
+        rgba(255, 255, 255, 0.04) 100%
+      );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 6px 18px rgba(0, 0, 0, 0.25);
   }
   .topbar button {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.85rem;
     color: var(--fg);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    transition: background 160ms, border-color 160ms, transform 160ms;
   }
   .topbar button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .topbar .back:hover {
+    transform: translateX(-2px);
+  }
+  .topbar .restart:hover {
+    transform: rotate(-20deg);
   }
   .info {
-    font-size: 0.875rem;
-    opacity: 0.85;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.9rem;
+  }
+  .info .chapter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg,
+      hsl(var(--hue), 80%, 62%),
+      hsl(calc(var(--hue) + 25), 80%, 55%)
+    );
+    color: #0f1722;
+    font-weight: 800;
+    font-size: 0.85rem;
+    box-shadow:
+      0 0 0 2px hsla(var(--hue), 70%, 60%, 0.2),
+      0 3px 8px hsla(var(--hue), 70%, 30%, 0.35);
+  }
+  .info .level-label {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .info .dot {
+    opacity: 0.35;
+  }
+  .info .shots {
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
   }
   .play-area {
     flex: 1;
@@ -199,6 +263,7 @@
        vertical, entre les deux membres.
      - `.lhs/.rhs { flex: 1 1 0 }` → largeurs strictement égales. */
   .balance-group {
+    position: relative;
     display: flex;
     align-items: stretch;
     justify-content: center;
