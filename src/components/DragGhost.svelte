@@ -16,6 +16,7 @@
   const card = $derived.by(() => {
     if (drag.state?.kind !== "card" || !game.state) return null;
     const loc = locateCard(game.state, drag.state.cardId);
+    console.log("[DragGhost] card drag, cardId:", drag.state.cardId, "loc:", loc);
     if (!loc) return null;
     const list =
       loc.where === "numerator"
