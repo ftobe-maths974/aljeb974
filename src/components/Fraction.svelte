@@ -26,11 +26,19 @@
   );
   /**
    * Drag intra-fraction sur les cartes du NUMÉRATEUR : activé dès que
-   * multPower ou negPower est débloqué (chap. 4-8 et 5-1).
-   * Le drag intra-fraction sur les DÉNOMINATEURS reste toujours actif
-   * (simplification num/dén disponible dès chap. 2).
+   * multPower ou negPower est débloqué (chap. 4-8 et 5-1) ET qu'il existe
+   * au moins une autre carte dans le numérateur pour servir de cible.
+   *
+   * Si le numérateur ne contient qu'UNE carte (ex : `x` ou `b`), la carte
+   * n'est PAS draggable individuellement — c'est la FRACTION entière qui
+   * doit pouvoir être traversée vers l'autre membre (crossPower). Sans
+   * cette exclusion, le drag de carte intercepterait le pointerdown et
+   * bloquerait le crossPower.
    */
-  const numDraggable = $derived(game.caps.multPower || game.caps.negPower);
+  const numDraggable = $derived(
+    (game.caps.multPower || game.caps.negPower) &&
+      fraction.numerator.length > 1,
+  );
 </script>
 
 <div
