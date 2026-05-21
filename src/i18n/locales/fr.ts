@@ -81,7 +81,9 @@ export const fr = {
     balanceRestored: "J'équilibre la balance !",
     takeOpposite: "Je veux l'opposé !",
     simplifyFraction: "Pareil en haut, pareil en bas : ça fait 1 !",
-    crossSign: "Je traverse… et je change de signe !",
+    crossSign: "Traverser\nc'est prendre l'opposé !",
+    fillHole: "Je vais simplifier !",
+    addLiterals: "J'additionne !",
   },
 
   keyLevels: {

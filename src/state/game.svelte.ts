@@ -18,6 +18,8 @@ import {
   cancelPending,
   canCancelOpposites,
   canMoveAcross,
+  addLiterals,
+  canAddLiterals,
   canFillHole,
   canReverseInPioche,
   canSimplifyFraction,
@@ -243,11 +245,24 @@ class GameStore {
       target.holeCardId &&
       canFillHole(this.state, sourceFractionId, target.holeCardId)
     ) {
+      // Capture la position du trou AVANT son remplacement (l'élément DOM
+      // disparaît après applyState).
+      const holeEl = document.querySelector<HTMLElement>(
+        `[data-card-id="${target.holeCardId}"]`,
+      );
+      const holeRect = holeEl?.getBoundingClientRect() ?? null;
       this.applyState(
         fillHole(this.state, sourceFractionId, target.holeCardId, {
           dropOnce: this.caps.dropOnce,
         }),
       );
+      if (holeRect) {
+        fx.spawnPuff(
+          holeRect.left + holeRect.width / 2,
+          holeRect.top + holeRect.height / 2,
+          t().fx.fillHole,
+        );
+      }
       return true;
     }
 
@@ -257,24 +272,31 @@ class GameStore {
       return true;
     }
 
-    // 2. Cible une fraction du même membre + atomes opposés → cancelOpposites
+    // 2. Cible une fraction du même membre :
+    //    - atomes opposés       → cancelOpposites
+    //    - deux littéraux + add → addLiterals (chap. 4+)
     if (target.fractionId) {
       const tgt = locateFraction(this.state, target.fractionId);
-      if (
-        tgt &&
-        src.side === tgt.side &&
-        canCancelOpposites(this.state, sourceFractionId, target.fractionId)
-      ) {
-        // Le 0 va apparaître à la place de la cible (l'id de la fraction est
-        // préservé), mais le layout flex se réaligne après la suppression du
-        // dragué. On attend donc une frame pour spawn le pouf à la position
-        // finale du 0, pas à sa position pré-réalignement.
-        const targetFractionId = target.fractionId;
-        this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
-        requestAnimationFrame(() =>
-          fx.spawnPuffOnFraction(targetFractionId, t().fx.oppositesCancel),
-        );
-        return true;
+      if (tgt && src.side === tgt.side) {
+        if (canCancelOpposites(this.state, sourceFractionId, target.fractionId)) {
+          const targetFractionId = target.fractionId;
+          this.applyState(cancelOpposites(this.state, sourceFractionId, target.fractionId));
+          requestAnimationFrame(() =>
+            fx.spawnPuffOnFraction(targetFractionId, t().fx.oppositesCancel),
+          );
+          return true;
+        }
+        if (
+          this.caps.addPower &&
+          canAddLiterals(this.state, sourceFractionId, target.fractionId)
+        ) {
+          const targetFractionId = target.fractionId;
+          this.applyState(addLiterals(this.state, sourceFractionId, target.fractionId));
+          requestAnimationFrame(() =>
+            fx.spawnPuffOnFraction(targetFractionId, t().fx.addLiterals),
+          );
+          return true;
+        }
       }
     }
 

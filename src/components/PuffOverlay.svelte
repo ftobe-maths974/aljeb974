@@ -41,11 +41,15 @@
     font-style: italic;
     font-weight: 800;
     font-size: 1.25rem;
+    line-height: 1.15;
     color: var(--accent);
     text-shadow:
       0 0 6px rgba(0, 0, 0, 0.85),
       0 2px 4px rgba(0, 0, 0, 0.7);
-    white-space: nowrap;
+    /* pre-line : les \n dans les slogans sont rendus comme des retours
+       à la ligne (ex: « Traverser\nc'est prendre l'opposé ! »). */
+    white-space: pre-line;
+    text-align: center;
     animation: slogan-float 1400ms ease-out forwards;
   }
   @keyframes slogan-float {
