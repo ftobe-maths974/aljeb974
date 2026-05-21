@@ -3,6 +3,8 @@
   import OrientationGate from "./lib/OrientationGate.svelte";
   import GameScreen from "./components/GameScreen.svelte";
   import { game } from "./state/game.svelte.ts";
+  import { astuce } from "./state/astuce.svelte.ts";
+  import { KEY_LEVEL_IDS, getKeyLevel } from "./data/key-levels.ts";
 
   type Screen = "home" | "menu" | "play";
   let screen = $state<Screen>("home");
@@ -16,6 +18,11 @@
   function startLevel(chapter: number, level: number) {
     game.loadLevel(chapter, level);
     screen = "play";
+  }
+
+  function goToMenu() {
+    astuce.stop();
+    screen = "menu";
   }
 </script>
 
@@ -62,8 +69,18 @@
             <h3>Chapitre {chapter.index}</h3>
             <div class="levels">
               {#each Object.keys(chapter.levels).map(Number).sort((a, b) => a - b) as lv (lv)}
-                <button class="level" onclick={() => startLevel(chapter.index, lv)}>
+                {@const id = `${chapter.index}-${lv}`}
+                {@const key = KEY_LEVEL_IDS.has(id) ? getKeyLevel(id) : null}
+                <button
+                  class="level"
+                  class:key-level={key}
+                  onclick={() => startLevel(chapter.index, lv)}
+                  title={key?.title ?? ""}
+                >
                   {lv}
+                  {#if key}
+                    <span class="bulb" aria-label="Nouveau : {key.title}">💡</span>
+                  {/if}
                 </button>
               {/each}
             </div>
@@ -72,7 +89,7 @@
       </div>
     </main>
   {:else}
-    <GameScreen onBack={() => (screen = "menu")} />
+    <GameScreen onBack={goToMenu} />
   {/if}
 </OrientationGate>
 
@@ -194,9 +211,25 @@
     border-radius: 0.4rem;
     font-weight: 700;
     font-size: 0.95rem;
+    position: relative;
   }
   .level:hover {
     background: var(--accent);
     color: var(--bg);
+  }
+  .level.key-level {
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+  .level .bulb {
+    position: absolute;
+    top: -0.4rem;
+    right: -0.4rem;
+    font-size: 0.85rem;
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.7));
+    animation: bulb-glow 2s ease-in-out infinite;
+  }
+  @keyframes bulb-glow {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
   }
 </style>

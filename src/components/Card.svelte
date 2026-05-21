@@ -13,6 +13,16 @@
   const kind = $derived(card.atom.kind);
   const isX = $derived(card.atom.kind === "unknown");
   const isNeg = $derived(card.atom.sign === -1);
+  // Valeur sérialisée pour les sélecteurs d'astuces (ex: "x", "-t", "2", "_")
+  const dataValue = $derived(serializedValue(card.atom));
+
+  function serializedValue(a: Atom): string {
+    const prefix = a.sign === -1 ? "-" : "";
+    if (a.kind === "unknown") return prefix + "x";
+    if (a.kind === "hole") return prefix + "_";
+    if (a.kind === "literal") return prefix + a.value.toString();
+    return prefix + a.letter;
+  }
 
   function displayText(a: Atom): string {
     if (a.kind === "hole") return "?";
@@ -38,6 +48,7 @@
   class:symbol={kind === "symbol"}
   class:neg={isNeg}
   data-card-id={card.id}
+  data-card-value={dataValue}
   onclick={handle}
   onkeydown={handle}
   aria-label={text}

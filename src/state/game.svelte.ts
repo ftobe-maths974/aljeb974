@@ -32,6 +32,7 @@ import {
   type GameState,
 } from "../lib/engine/index.ts";
 import levelsData from "../../migration/levels.json";
+import { astuce } from "./astuce.svelte.ts";
 
 // ─── Lookup helper ──────────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ class GameStore {
     this.level = level;
     const lvl = findLevel(chapter, level);
     this.state = initialState(lvl, `${chapter}-${level}`);
+    astuce.startForLevel(`${chapter}-${level}`);
   }
 
   /** Re-lance le niveau courant. */

@@ -5,6 +5,7 @@
   import VictoryOverlay from "./VictoryOverlay.svelte";
   import DragGhost from "./DragGhost.svelte";
   import FlashAlert from "./FlashAlert.svelte";
+  import Astuce from "./Astuce.svelte";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -76,6 +77,7 @@
 
     <DragGhost />
     <FlashAlert />
+    <Astuce />
 
     {#if game.isPending}
       <div class="pending-bar">

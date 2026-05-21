@@ -29,7 +29,7 @@
     onDrop: (t) => onDrop?.(fraction.id, t),
   }}
 >
-  <div class="row numerator">
+  <div class="row numerator" data-region="numerator">
     {#each fraction.numerator as card (card.id)}
       {#if card !== fraction.numerator[0]}
         <span class="mult-dot" aria-hidden="true">·</span>
@@ -38,7 +38,7 @@
     {/each}
   </div>
   {#if hasDen}
-    <div class="row denominator">
+    <div class="row denominator" data-region="denominator">
       {#each fraction.denominator! as card (card.id)}
         {#if card !== fraction.denominator![0]}
           <span class="mult-dot" aria-hidden="true">·</span>
