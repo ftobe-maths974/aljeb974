@@ -3,8 +3,16 @@
   import { locateCard, isZero, isOne } from "../lib/engine/index.ts";
   import Side from "./Side.svelte";
   import VictoryOverlay from "./VictoryOverlay.svelte";
+  import DragGhost from "./DragGhost.svelte";
 
   let { onBack }: { onBack?: () => void } = $props();
+
+  function handleDrop(
+    sourceFractionId: string,
+    target: { fractionId?: string; side?: "lhs" | "rhs" },
+  ) {
+    game.tryDrop(sourceFractionId, target);
+  }
 
   // Au clic sur une carte : tenter une suppression de 0 ou 1 selon le contexte.
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
@@ -44,18 +52,20 @@
     </header>
 
     <main class="play-area">
-      <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} />
+      <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} />
       {#if game.state.rhs.length > 0}
         <span class="equals" aria-hidden="true">=</span>
-        <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} />
+        <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} />
       {/if}
     </main>
 
     {#if game.state.pioche.length > 0}
       <footer class="pioche-bar">
-        <Side fractions={game.state.pioche} name="pioche" onCardClick={handleCardClick} />
+        <Side fractions={game.state.pioche} name="pioche" onCardClick={handleCardClick} onDrop={handleDrop} />
       </footer>
     {/if}
+
+    <DragGhost />
 
     {#if game.solved}
       <VictoryOverlay

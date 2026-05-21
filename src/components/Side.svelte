@@ -1,24 +1,41 @@
 <script lang="ts">
   import type { FractionInstance, Side as SideName } from "../lib/engine/index.ts";
   import Fraction from "./Fraction.svelte";
+  import { drag } from "../state/drag.svelte.ts";
 
   let {
     fractions,
     name,
     onCardClick,
+    onDrop,
   }: {
     fractions: FractionInstance[];
     name: SideName;
     onCardClick?: (cardId: string) => void;
+    onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs" }) => void;
   } = $props();
+
+  const isHoveredSide = $derived(
+    drag.isDragging() &&
+      (name === "lhs" || name === "rhs") &&
+      drag.hoverSide === name &&
+      drag.hoverFractionId === null,
+  );
 </script>
 
-<div class="side" class:lhs={name === "lhs"} class:rhs={name === "rhs"} class:pioche={name === "pioche"} data-side={name}>
+<div
+  class="side"
+  class:lhs={name === "lhs"}
+  class:rhs={name === "rhs"}
+  class:pioche={name === "pioche"}
+  class:hovered={isHoveredSide}
+  data-side={name}
+>
   {#each fractions as fraction, i (fraction.id)}
     {#if i > 0 && name !== "pioche"}
       <span class="plus" aria-hidden="true">+</span>
     {/if}
-    <Fraction {fraction} {onCardClick} />
+    <Fraction {fraction} {onCardClick} {onDrop} />
   {/each}
 </div>
 
@@ -34,6 +51,7 @@
     background: var(--side-bg);
     border: 1px solid var(--side-border);
     min-height: 8rem;
+    transition: background 120ms, border-color 120ms, box-shadow 120ms;
   }
   .lhs, .rhs {
     flex: 1;
@@ -46,5 +64,10 @@
     color: var(--fg);
     opacity: 0.6;
     padding: 0 0.25rem;
+  }
+  .hovered {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
   }
 </style>

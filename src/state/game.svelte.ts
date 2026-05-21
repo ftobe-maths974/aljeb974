@@ -14,11 +14,17 @@
  */
 
 import {
+  cancelOpposites,
+  canCancelOpposites,
+  canMoveAcross,
   capabilitiesFor,
   deleteOne,
   deleteZero,
+  dropFromPioche,
   initialState,
   isSolved,
+  locateFraction,
+  moveAcross,
   stars,
   type Capabilities,
   type GameState,
@@ -67,6 +73,52 @@ class GameStore {
   deleteOne(cardId: string) {
     if (!this.state) return;
     this.state = deleteOne(this.state, cardId);
+  }
+
+  /**
+   * Tente une action drag-drop fraction → fraction (annulation d'opposés, etc.)
+   * ou fraction → côté (cross-side). Retourne true si une opération a été appliquée.
+   */
+  tryDrop(sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs" }) {
+    if (!this.state) return false;
+    const src = locateFraction(this.state, sourceFractionId);
+    if (!src) return false;
+
+    // 1. Si la source vient de la pioche et la cible est un côté → dropFromPioche
+    if (src.side === "pioche" && (target.side === "lhs" || target.side === "rhs")) {
+      this.state = dropFromPioche(this.state, sourceFractionId, target.side, {
+        dropOnce: this.caps.dropOnce,
+      });
+      return true;
+    }
+
+    // 2. Si la cible est une fraction et que les deux sont au même membre :
+    //    tenter l'annulation d'opposés.
+    if (target.fractionId) {
+      const tgt = locateFraction(this.state, target.fractionId);
+      if (
+        tgt &&
+        src.side === tgt.side &&
+        canCancelOpposites(this.state, sourceFractionId, target.fractionId)
+      ) {
+        this.state = cancelOpposites(this.state, sourceFractionId, target.fractionId);
+        return true;
+      }
+    }
+
+    // 3. Si la cible est l'autre membre (et crossPower actif) → moveAcross.
+    if (
+      this.caps.crossPower &&
+      (target.side === "lhs" || target.side === "rhs") &&
+      (src.side === "lhs" || src.side === "rhs") &&
+      src.side !== target.side &&
+      canMoveAcross(this.state, sourceFractionId)
+    ) {
+      this.state = moveAcross(this.state, sourceFractionId);
+      return true;
+    }
+
+    return false;
   }
 }
 
