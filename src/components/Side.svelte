@@ -89,9 +89,10 @@
     position: relative;
     display: flex;
     flex-wrap: wrap;
-    /* flex-end : cartes alignées sur la même ligne basse (les fractions
-       s'étirent vers le haut, pas vers le bas, donc tout s'aligne). */
-    align-items: flex-end;
+    /* center : cartes et fractions partagent leur centre vertical
+       (les fractions s'étirent symétriquement autour, les cartes solitaires
+       sont au milieu). */
+    align-items: center;
     justify-content: center;
     gap: 0.25rem;
     padding: 0.75rem;

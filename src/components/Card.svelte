@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Atom, CardInstance } from "../lib/engine/index.ts";
+  import { game } from "../state/game.svelte.ts";
 
   let {
     card,
@@ -13,6 +14,18 @@
   const kind = $derived(card.atom.kind);
   const isX = $derived(card.atom.kind === "unknown");
   const isNeg = $derived(card.atom.sign === -1);
+
+  // Le « ? » de spotlight est rendu en enfant de la carte x quand une équation
+  // est en cours : il suit ainsi naturellement tout déplacement / transform
+  // de la carte (drag, reflow, transition).
+  const showSpotlight = $derived(
+    isX &&
+      card.atom.sign === 1 &&
+      !!game.state &&
+      game.state.rhs.length > 0 &&
+      !game.solved &&
+      !game.victoryReady,
+  );
   // Valeur sérialisée pour les sélecteurs d'astuces (ex: "x", "-t", "2", "_")
   const dataValue = $derived(serializedValue(card.atom));
 
@@ -54,11 +67,15 @@
   aria-label={text}
 >
   <span class="value">{text}</span>
+  {#if showSpotlight}
+    <span class="x-spotlight" aria-hidden="true">?</span>
+  {/if}
 </button>
 
 <style>
   .card {
     --size: clamp(2.5rem, 8vh, 4rem);
+    position: relative;
     width: var(--size);
     height: var(--size);
     border-radius: 0.5rem;
@@ -76,6 +93,33 @@
     transition: transform 100ms ease-out, box-shadow 100ms ease-out;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+  }
+  /* « ? » de spotlight attaché à la carte x (suit tout son mouvement). */
+  .x-spotlight {
+    position: absolute;
+    top: -1.55em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 1.2em;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow:
+      0 0 12px rgba(245, 158, 11, 0.6),
+      0 2px 8px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+    animation: x-levitate 2.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+  @keyframes x-levitate {
+    0%, 100% {
+      transform: translate(-50%, 0) scale(1) rotate(-4deg);
+    }
+    50% {
+      transform: translate(-50%, -8px) scale(1.07) rotate(4deg);
+    }
   }
   .card:hover,
   .card:focus-visible {

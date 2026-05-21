@@ -9,7 +9,6 @@
   import Balance from "./Balance.svelte";
   import LevelIntro from "./LevelIntro.svelte";
   import PuffOverlay from "./PuffOverlay.svelte";
-  import Spotlight from "./Spotlight.svelte";
   import Solution from "./Solution.svelte";
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
@@ -100,7 +99,6 @@
     <FlashAlert />
     <Astuce />
     <LevelIntro />
-    <Spotlight />
     <PuffOverlay />
 
     {#if game.solved && game.state.rhs.length > 0 && !game.victoryReady}
