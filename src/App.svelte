@@ -40,23 +40,22 @@
       <div class="lang-corner">
         <LocaleSwitcher />
       </div>
-      <header>
-        <h1>Aljeb974</h1>
-        <p class="tagline">{t().ui.tagline}</p>
-      </header>
-
-      <section class="status">
-        <p>
-          <strong>{totalChapters}</strong> {t().ui.chapters} ·
-          <strong>{totalLevels}</strong> {t().ui.levels}
-        </p>
-
-        <div class="cta">
-          <button class="primary" onclick={() => startLevel(1, 1)}>{t().ui.playFirstLevel}</button>
-          <button onclick={() => (screen = "menu")}>{t().ui.chooseLevel}</button>
-        </div>
-      </section>
-
+      <div class="center-group">
+        <section class="status">
+          <p>
+            <strong>{totalChapters}</strong> {t().ui.chapters} ·
+            <strong>{totalLevels}</strong> {t().ui.levels}
+          </p>
+          <div class="cta">
+            <button class="primary" onclick={() => startLevel(1, 1)}>{t().ui.playFirstLevel}</button>
+            <button onclick={() => (screen = "menu")}>{t().ui.chooseLevel}</button>
+          </div>
+        </section>
+        <header>
+          <h1>Aljeb974</h1>
+          <p class="tagline">{t().ui.tagline}</p>
+        </header>
+      </div>
       <footer>
         <a href="https://github.com/ftobe-maths974/aljeb974" target="_blank" rel="noopener">
           {t().ui.githubLink}
@@ -106,7 +105,8 @@
   .placeholder {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
     height: 100%;
     padding: 2rem;
     text-align: center;
@@ -126,6 +126,21 @@
     top: 0.75rem;
     right: 0.75rem;
   }
+  /* Le groupe central regroupe status (counts + CTA) et le titre, alignés
+     verticalement et centrés dans la page. */
+  .center-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .placeholder footer {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
   .lang-corner-menu {
     margin-left: auto;
   }
@@ -140,9 +155,6 @@
   .tagline {
     margin: 0.5rem 0 0;
     opacity: 0.75;
-  }
-  .status {
-    margin: auto 0;
   }
   .cta {
     display: flex;
