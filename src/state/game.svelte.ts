@@ -19,13 +19,19 @@ import {
   canCancelOpposites,
   canMoveAcross,
   addLiterals,
+  applyNegOne,
   canAddLiterals,
+  canApplyNegOne,
+  canFactorize,
   canFillHole,
+  canMultiplyInFraction,
   canReverseInPioche,
   canSimplifyFraction,
   capabilitiesFor,
   completePiocheDrop,
+  factorize,
   fillHole,
+  multiplyInFraction,
   deleteOne,
   deleteZero,
   initialState,
@@ -341,10 +347,43 @@ class GameStore {
       return false;
     }
     if (!targetCardId) return false;
-    if (!canSimplifyFraction(this.state, sourceCardId, targetCardId)) return false;
-    // Pouf à l'endroit de la carte cible (qui devient « 1 »).
-    fx.spawnPuffOnCard(targetCardId, t().fx.simplifyFraction);
-    this.applyState(simplifyFraction(this.state, sourceCardId, targetCardId));
+    // 1. Simplification : num et dén ont la même valeur → cible devient 1.
+    if (canSimplifyFraction(this.state, sourceCardId, targetCardId)) {
+      fx.spawnPuffOnCard(targetCardId, t().fx.simplifyFraction);
+      this.applyState(simplifyFraction(this.state, sourceCardId, targetCardId));
+      return true;
+    }
+    // 2. Drag d'un « −1 » sur une carte de même région (negPower, chap. 5+) :
+    //    prend l'opposé. Doit être vérifié AVANT multiplyInFraction (qui
+    //    accepte deux littéraux et donnerait juste le produit).
+    if (
+      this.caps.negPower &&
+      canApplyNegOne(this.state, sourceCardId, targetCardId)
+    ) {
+      fx.spawnPuffOnCard(targetCardId, t().fx.negOne);
+      this.applyState(applyNegOne(this.state, sourceCardId, targetCardId));
+      return true;
+    }
+    // 3. Multiplication intra-fraction (multPower) : deux littéraux dans la
+    //    même région → cible devient le produit, source disparaît.
+    if (
+      this.caps.multPower &&
+      canMultiplyInFraction(this.state, sourceCardId, targetCardId)
+    ) {
+      fx.spawnPuffOnCard(targetCardId, t().fx.multiply);
+      this.applyState(multiplyInFraction(this.state, sourceCardId, targetCardId));
+      return true;
+    }
+    return false;
+  }
+
+  /** Double-clic sur un littéral > 3 → décomposition en facteurs premiers. */
+  tryFactorize(cardId: string): boolean {
+    if (!this.state) return false;
+    if (!this.caps.primeFactorPower) return false;
+    if (!canFactorize(this.state, cardId)) return false;
+    fx.spawnPuffOnCard(cardId, t().fx.factorize);
+    this.applyState(factorize(this.state, cardId));
     return true;
   }
 }

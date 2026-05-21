@@ -6,6 +6,7 @@
   let {
     card,
     onclick,
+    ondblclick: onDoubleClick,
     /** Si défini, active le drag de carte (utilisé pour cartes du dénominateur). */
     parentFractionId,
     onCardDrop,
@@ -14,6 +15,7 @@
   }: {
     card: CardInstance;
     onclick?: (cardId: string) => void;
+    ondblclick?: (cardId: string) => void;
     parentFractionId?: string;
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
     isGhost?: boolean;
@@ -76,6 +78,12 @@
     e.preventDefault();
     onclick?.(card.id);
   }
+
+  function handleDoubleClick(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    onDoubleClick?.(card.id);
+  }
 </script>
 
 <button
@@ -92,6 +100,7 @@
   data-card-id={card.id}
   data-card-value={dataValue}
   onclick={handle}
+  ondblclick={handleDoubleClick}
   onkeydown={handle}
   aria-label={text}
   use:draggableCard={

@@ -29,6 +29,12 @@
     game.tryCardDrop(sourceCardId, targetCardId);
   }
 
+  function handleCardDoubleClick(cardId: string) {
+    // Le double-clic ne compte pas de coup en plus (les 2 clicks ont déjà
+    // chacun incrémenté). Sert au primeFactorPower (chap. 4+).
+    game.tryFactorize(cardId);
+  }
+
   // Au clic sur une carte : tenter une suppression de 0 ou 1 selon le contexte.
   // (D'autres actions — drag, opposés, etc. — viendront plus tard.)
   function handleCardClick(cardId: string) {
@@ -63,9 +69,9 @@
       } catch {
         /* ignoré */
       }
-    } else if (isOne(card.atom)) {
-      // Le « 1 » multiplicatif est un superpower introduit au niveau 2-5.
-      // Avant : suppression silencieuse. À partir de 2-5 : pouf + slogan.
+    } else if (isOne(card.atom) && card.atom.sign === 1) {
+      // « 1 » multiplicatif (positif) : superpower depuis le niveau 2-5.
+      // Le « -1 » n'a pas ce comportement (il sert au negPower au chap. 5+).
       const unlocked = game.chapter > 2 || (game.chapter === 2 && game.level >= 5);
       if (unlocked) fx.spawnPuffOnCard(cardId, t().fx.oneNoChange);
       try {
@@ -89,10 +95,10 @@
 
     <main class="play-area">
       <div class="balance-group">
-        <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
+        <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onCardDoubleClick={handleCardDoubleClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
         {#if game.state.rhs.length > 0}
           <span class="equals">=</span>
-          <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
+          <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onCardDoubleClick={handleCardDoubleClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
         {/if}
       </div>
     </main>

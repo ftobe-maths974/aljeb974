@@ -84,6 +84,9 @@ export const fr = {
     crossSign: "Traverser\nc'est prendre l'opposé !",
     fillHole: "Je vais simplifier !",
     addLiterals: "J'additionne !",
+    multiply: "Je multiplie !",
+    factorize: "Je décompose !",
+    negOne: "×(−1)\nc'est prendre l'opposé !",
   },
 
   keyLevels: {

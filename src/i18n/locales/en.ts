@@ -79,6 +79,9 @@ export const en: Messages = {
     crossSign: "Crossing over\nflips the sign!",
     fillHole: "I'm going to simplify!",
     addLiterals: "I add them up!",
+    multiply: "I multiply!",
+    factorize: "I break it down!",
+    negOne: "×(−1)\nflips the sign!",
   },
 
   keyLevels: {

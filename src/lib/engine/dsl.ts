@@ -169,21 +169,21 @@ export interface Capabilities {
  */
 export function capabilitiesFor(chapter: number, level: number): Capabilities {
   const id = `${chapter}-${level}`;
+  /** « À partir du niveau (chapter, level) inclus » → progressive unlock. */
+  const at = (c: number, l: number) =>
+    chapter > c || (chapter === c && level >= l);
+  // Chaque power s'active pile au niveau-clé qui l'introduit (cf. KEY_LEVELS).
   return {
-    dropOnce: chapter < 2,
-    reversePower: chapter > 1 || (chapter === 1 && level > 15),
-    // bug fix : exclusion explicite de 3-7
-    dropdenPower:
-      (chapter === 2 && level > 10) || (chapter > 2 && id !== "3-7"),
-    // bug fix : le original avait deux clauses dont la 2e était inatteignable.
-    dropnumPower: chapter > 3 || (chapter === 3 && level > 6),
-    crossPower: chapter > 2,
-    // bug fix idem : la 2e clause (chapter > 3 && level > 7) était redondante.
-    multPower: chapter > 3,
-    addPower: chapter > 3,
-    primeFactorPower: chapter > 3, // ou (chapter > 3 && level > 3) — équivalent à chapter > 3
-    negPower: chapter > 4,
-    stylePower: STYLE_POWER_LEVELS.has(id),
+    dropOnce:         chapter < 2,
+    reversePower:     at(1, 16),
+    dropdenPower:     at(2, 11),
+    crossPower:       at(3, 1),
+    dropnumPower:     at(3, 7),
+    addPower:         at(4, 1),
+    primeFactorPower: at(4, 4),
+    multPower:        at(4, 8),
+    negPower:         at(5, 1),
+    stylePower:       STYLE_POWER_LEVELS.has(id),
   };
 }
 

@@ -576,6 +576,176 @@ export function simplifyFraction(
   });
 }
 
+/* ─── 8.3. Multiplication intra-fraction (multPower, chap. 4+) ────────────── */
+
+/**
+ * Drag d'une carte sur une autre carte du MÊME numérateur (ou même
+ * dénominateur) — toutes deux littérales — pour multiplier leurs valeurs.
+ * La cible devient le produit, la source disparaît. Cf. droppableFracSimplify
+ * branche « siblings » ([application.coffee:864-867](../../legacy/js/application.coffee#L864-L867)).
+ */
+export function canMultiplyInFraction(
+  state: GameState,
+  sourceCardId: EntityId,
+  targetCardId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  if (sourceCardId === targetCardId) return false;
+  const sLoc = locateCard(state, sourceCardId);
+  const tLoc = locateCard(state, targetCardId);
+  if (!sLoc || !tLoc) return false;
+  if (sLoc.side === "pioche" || tLoc.side === "pioche") return false;
+  if (sLoc.side !== tLoc.side || sLoc.fractionIdx !== tLoc.fractionIdx) return false;
+  if (sLoc.where !== tLoc.where) return false; // doivent être dans la MÊME région
+  const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  const list = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
+  const sCard = list[sLoc.cardIdx]!;
+  const tCard = list[tLoc.cardIdx]!;
+  return sCard.atom.kind === "literal" && tCard.atom.kind === "literal";
+}
+
+export function multiplyInFraction(
+  state: GameState,
+  sourceCardId: EntityId,
+  targetCardId: EntityId,
+): GameState {
+  ensureNotPending(state, "multiplyInFraction");
+  if (!canMultiplyInFraction(state, sourceCardId, targetCardId)) {
+    throw new Error("multiplyInFraction illégale");
+  }
+  const sLoc = locateCard(state, sourceCardId)!;
+  const tLoc = locateCard(state, targetCardId)!;
+  const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  const list = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
+  const sVal = literalValue(list[sLoc.cardIdx]!.atom);
+  const tVal = literalValue(list[tLoc.cardIdx]!.atom);
+  const product = sVal * tVal;
+  // Cible devient le produit (id conservé), source retirée.
+  const newCard = { id: list[tLoc.cardIdx]!.id, atom: fromLiteral(product) };
+  let newList = replaceAt(list, tLoc.cardIdx, newCard);
+  newList = removeAt(newList, sLoc.cardIdx);
+  const newFrac =
+    sLoc.where === "numerator"
+      ? { ...frac, numerator: newList }
+      : { ...frac, denominator: newList };
+  return updateSide(state, sLoc.side, (fs) => replaceAt(fs, sLoc.fractionIdx, newFrac));
+}
+
+/* ─── 8.4. Multiplication par −1 / prendre l'opposé (negPower, chap. 5+) ─── */
+
+/**
+ * Glisser une carte « −1 » sur une autre carte de la même région (num ou dén)
+ * d'une même fraction → la cible voit son signe inversé, le « −1 » disparaît.
+ * Multiplication par −1 = prendre l'opposé.
+ */
+export function canApplyNegOne(
+  state: GameState,
+  sourceCardId: EntityId,
+  targetCardId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  if (sourceCardId === targetCardId) return false;
+  const sLoc = locateCard(state, sourceCardId);
+  const tLoc = locateCard(state, targetCardId);
+  if (!sLoc || !tLoc) return false;
+  if (sLoc.side === "pioche" || tLoc.side === "pioche") return false;
+  if (sLoc.side !== tLoc.side || sLoc.fractionIdx !== tLoc.fractionIdx) return false;
+  if (sLoc.where !== tLoc.where) return false;
+  const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  const list = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
+  const sCard = list[sLoc.cardIdx]!;
+  return sCard.atom.kind === "literal" && sCard.atom.value === 1 && sCard.atom.sign === -1;
+}
+
+export function applyNegOne(
+  state: GameState,
+  sourceCardId: EntityId,
+  targetCardId: EntityId,
+): GameState {
+  ensureNotPending(state, "applyNegOne");
+  if (!canApplyNegOne(state, sourceCardId, targetCardId)) {
+    throw new Error("applyNegOne illégale");
+  }
+  const sLoc = locateCard(state, sourceCardId)!;
+  const tLoc = locateCard(state, targetCardId)!;
+  const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  const list = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
+  const tCard = list[tLoc.cardIdx]!;
+  // Cible : signe inversé (id conservé)
+  const flipped = { id: tCard.id, atom: flipSign(tCard.atom) };
+  let newList = replaceAt(list, tLoc.cardIdx, flipped);
+  // Source (-1) : retirée
+  newList = removeAt(newList, sLoc.cardIdx);
+  const newFrac =
+    sLoc.where === "numerator"
+      ? { ...frac, numerator: newList }
+      : { ...frac, denominator: newList };
+  return updateSide(state, sLoc.side, (fs) => replaceAt(fs, sLoc.fractionIdx, newFrac));
+}
+
+/* ─── 8.5. Factorisation en facteurs premiers (primeFactorPower, chap. 4+) ─ */
+
+/**
+ * Décompose un entier en ses facteurs premiers.
+ * Cf. legacy primeFactorization ([application.coffee:604-617](../../legacy/js/application.coffee#L604-L617)).
+ */
+function primeFactorize(n: number): number[] {
+  const factors: number[] = [];
+  let v = n;
+  let p = 2;
+  while (v > 1) {
+    if (v % p === 0) {
+      factors.push(p);
+      v /= p;
+    } else {
+      p += p === 2 ? 1 : 2;
+      if (p * p > v) {
+        factors.push(v);
+        break;
+      }
+    }
+  }
+  return factors;
+}
+
+/** Cliquer (double-tap) sur un littéral > 3 le casse en facteurs premiers. */
+export function canFactorize(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
+  const loc = locateCard(state, cardId);
+  if (!loc || loc.side === "pioche") return false;
+  const frac = state[loc.side][loc.fractionIdx]!;
+  const list = loc.where === "numerator" ? frac.numerator : frac.denominator;
+  const card = list?.[loc.cardIdx];
+  if (!card) return false;
+  const a = card.atom;
+  return a.kind === "literal" && a.sign === 1 && a.value > 3;
+}
+
+export function factorize(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "factorize");
+  if (!canFactorize(state, cardId)) throw new Error("factorize illégale");
+  const loc = locateCard(state, cardId)!;
+  const frac = state[loc.side][loc.fractionIdx]!;
+  const list = loc.where === "numerator" ? frac.numerator : frac.denominator!;
+  const card = list[loc.cardIdx]!;
+  const value = (card.atom as Extract<Atom, { kind: "literal" }>).value;
+  const factors = primeFactorize(value);
+  // Si pas de décomposition utile (déjà premier), ne change rien.
+  if (factors.length < 2) return state;
+
+  const ids = makeIdSource(`pf_`);
+  const replacements = factors.map((f) => ({
+    id: ids.next(),
+    atom: { kind: "literal" as const, sign: 1 as const, value: f },
+  }));
+  const newList = [...list.slice(0, loc.cardIdx), ...replacements, ...list.slice(loc.cardIdx + 1)];
+  const newFrac =
+    loc.where === "numerator"
+      ? { ...frac, numerator: newList }
+      : { ...frac, denominator: newList };
+  return updateSide(state, loc.side, (fs) => replaceAt(fs, loc.fractionIdx, newFrac));
+}
+
 /* ─── 9. Addition de deux littéraux (addPower, chap. 4+) ───────────────────── */
 
 export function addLiterals(

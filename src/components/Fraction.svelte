@@ -6,11 +6,13 @@
   let {
     fraction,
     onCardClick,
+    onCardDoubleClick,
     onDrop,
     onCardDrop,
   }: {
     fraction: FractionInstance;
     onCardClick?: (cardId: string) => void;
+    onCardDoubleClick?: (cardId: string) => void;
     onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string }) => void;
     /** Callback pour un drag carte→carte (simplification num/dén). */
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
@@ -39,7 +41,7 @@
       {#if card !== fraction.numerator[0]}
         <span class="mult-dot" aria-hidden="true">×</span>
       {/if}
-      <Card {card} onclick={onCardClick} />
+      <Card {card} onclick={onCardClick} ondblclick={onCardDoubleClick} />
     {/each}
   </div>
   {#if hasDen}
@@ -53,6 +55,7 @@
         <Card
           {card}
           onclick={onCardClick}
+          ondblclick={onCardDoubleClick}
           parentFractionId={fraction.id}
           {onCardDrop}
         />

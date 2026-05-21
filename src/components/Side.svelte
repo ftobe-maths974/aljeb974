@@ -10,12 +10,14 @@
     fractions,
     name,
     onCardClick,
+    onCardDoubleClick,
     onDrop,
     onCardDrop,
   }: {
     fractions: FractionInstance[];
     name: SideName;
     onCardClick?: (cardId: string) => void;
+    onCardDoubleClick?: (cardId: string) => void;
     onDrop?: (sourceFractionId: string, target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string }) => void;
     onCardDrop?: (sourceCardId: string, targetCardId: string | null) => void;
   } = $props();
@@ -73,7 +75,7 @@
     {#if i > 0 && name !== "pioche"}
       <span class="plus" aria-hidden="true">+</span>
     {/if}
-    <Fraction {fraction} {onCardClick} {onDrop} {onCardDrop} />
+    <Fraction {fraction} {onCardClick} {onCardDoubleClick} {onDrop} {onCardDrop} />
   {/each}
   {#if pendingTarget}
     {#if fractions.length > 0}
