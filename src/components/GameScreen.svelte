@@ -7,6 +7,9 @@
   import FlashAlert from "./FlashAlert.svelte";
   import Astuce from "./Astuce.svelte";
   import Balance from "./Balance.svelte";
+  import LevelIntro from "./LevelIntro.svelte";
+  import PuffOverlay from "./PuffOverlay.svelte";
+  import { fx } from "../state/fx.svelte.ts";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -42,12 +45,15 @@
       return;
     }
     if (isZero(card.atom)) {
+      // Spawn la vapeur AVANT de supprimer (sinon l'élément a disparu)
+      fx.spawnPuffOnCard(cardId);
       try {
         game.deleteZero(cardId);
       } catch {
         /* ignoré */
       }
     } else if (isOne(card.atom)) {
+      fx.spawnPuffOnCard(cardId);
       try {
         game.deleteOne(cardId);
       } catch {
@@ -88,6 +94,8 @@
     <DragGhost />
     <FlashAlert />
     <Astuce />
+    <LevelIntro />
+    <PuffOverlay />
 
     {#if game.isPending}
       <div class="pending-bar">
