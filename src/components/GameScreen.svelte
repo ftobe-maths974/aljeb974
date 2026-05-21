@@ -77,11 +77,13 @@
     </header>
 
     <main class="play-area">
-      <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} />
-      {#if game.state.rhs.length > 0}
-        <span class="equals">=</span>
-        <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} />
-      {/if}
+      <div class="balance-group">
+        <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onDrop={handleDrop} />
+        {#if game.state.rhs.length > 0}
+          <span class="equals">=</span>
+          <Side fractions={game.state.rhs} name="rhs" onCardClick={handleCardClick} onDrop={handleDrop} />
+        {/if}
+      </div>
     </main>
 
     {#if game.state.pioche.length > 0}
@@ -153,12 +155,21 @@
   .play-area {
     flex: 1;
     display: flex;
-    /* flex-end : tous les bas (cartes + plateaux + pivot) s'alignent sur
-       une même ligne horizontale, comme une vraie balance. */
+    /* La balance entière est centrée verticalement dans la zone de jeu. */
+    align-items: center;
+    justify-content: center;
+  }
+  /* Groupe-balance : les deux membres + le « = » + plateaux + pivot,
+     bottom-alignés ensemble pour partager la même ligne basse. */
+  .balance-group {
+    display: flex;
     align-items: flex-end;
     justify-content: center;
     gap: 0.5rem;
-    padding-bottom: 1.5rem;
+    /* Place pour les plateaux qui dépassent du bas (-14px sur le Side) +
+       pour la pointe du pivot (~24px sous l'equals). */
+    padding-bottom: 2.5rem;
+    max-width: 100%;
   }
   .equals {
     font-size: 2.5rem;
