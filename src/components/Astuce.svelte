@@ -8,18 +8,22 @@
    */
   import { astuce } from "../state/astuce.svelte.ts";
 
-  // Position et taille du curseur d'aide
+  // Position et taille du curseur d'aide.
+  // Le doigt est positionné en bas de la carte cible, avec un léger overlap
+  // (visuellement il « pose » sur la carte plutôt que la couvrir).
+  // Comportement aligné avec la wideapp DragonBox-like.
+  const BOTTOM_OVERLAP = 6;
   const placement = $derived.by(() => {
     if (!astuce.state) return null;
     const r = astuce.state.fromRect;
     return {
       startX: r.left + r.width / 2,
-      startY: r.top + r.height / 2,
+      startY: r.bottom + BOTTOM_OVERLAP,
       endX: astuce.state.toRect
         ? astuce.state.toRect.left + astuce.state.toRect.width / 2
         : null,
       endY: astuce.state.toRect
-        ? astuce.state.toRect.top + astuce.state.toRect.height / 2
+        ? astuce.state.toRect.bottom + BOTTOM_OVERLAP
         : null,
     };
   });
