@@ -360,8 +360,11 @@ class GameStore {
       this.caps.negPower &&
       canApplyNegOne(this.state, sourceCardId, targetCardId)
     ) {
-      fx.spawnPuffOnCard(targetCardId, t().fx.negOne);
+      const tId = targetCardId;
       this.applyState(applyNegOne(this.state, sourceCardId, targetCardId));
+      // Le -1 supprimé fait reflower la rangée — on attend une frame pour
+      // que le pouf soit à la position FINALE de la carte qui a changé de signe.
+      requestAnimationFrame(() => fx.spawnPuffOnCard(tId, t().fx.negOne));
       return true;
     }
     // 3. Multiplication intra-fraction (multPower) : deux littéraux dans la
