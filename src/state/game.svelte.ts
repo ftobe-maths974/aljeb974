@@ -245,12 +245,15 @@ class GameStore {
       target.holeCardId &&
       canFillHole(this.state, sourceFractionId, target.holeCardId)
     ) {
-      // Capture la position du trou AVANT son remplacement (l'élément DOM
-      // disparaît après applyState).
+      // Capture la position du trou ET du Side parent AVANT le remplacement
+      // (l'élément DOM disparaît après applyState).
       const holeEl = document.querySelector<HTMLElement>(
         `[data-card-id="${target.holeCardId}"]`,
       );
       const holeRect = holeEl?.getBoundingClientRect() ?? null;
+      const sideTop = holeEl
+        ?.closest<HTMLElement>("[data-side]")
+        ?.getBoundingClientRect().top;
       this.applyState(
         fillHole(this.state, sourceFractionId, target.holeCardId, {
           dropOnce: this.caps.dropOnce,
@@ -261,6 +264,7 @@ class GameStore {
           holeRect.left + holeRect.width / 2,
           holeRect.top + holeRect.height / 2,
           t().fx.fillHole,
+          sideTop !== undefined ? sideTop - 14 : undefined,
         );
       }
       return true;

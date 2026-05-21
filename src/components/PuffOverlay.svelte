@@ -8,9 +8,6 @@
 
 {#each fx.puffs as puff (puff.id)}
   <div class="puff" style="left: {puff.x}px; top: {puff.y}px;" aria-hidden="true">
-    {#if puff.slogan}
-      <span class="slogan">{puff.slogan}</span>
-    {/if}
     <span class="core"></span>
     <span class="cloud c1"></span>
     <span class="cloud c2"></span>
@@ -21,6 +18,13 @@
     <span class="cloud c7"></span>
     <span class="cloud c8"></span>
   </div>
+  {#if puff.slogan}
+    <span
+      class="slogan"
+      style="left: {puff.x}px; top: {puff.sloganY ?? puff.y - 56}px;"
+      aria-hidden="true"
+    >{puff.slogan}</span>
+  {/if}
 {/each}
 
 <style>
@@ -32,11 +36,14 @@
     z-index: 150;
   }
 
+  /* Slogan positionné indépendamment du pouf : au-dessus du Side, aligné
+     en X avec la carte qui pop. Ses coordonnées (left/top) sont fournies
+     en inline-style via puff.x et puff.sloganY. */
   .slogan {
-    position: absolute;
-    left: 0;
-    top: -56px;
-    transform: translate(-50%, 0);
+    position: fixed;
+    z-index: 160;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
     font-weight: 800;
@@ -46,17 +53,17 @@
     text-shadow:
       0 0 6px rgba(0, 0, 0, 0.85),
       0 2px 4px rgba(0, 0, 0, 0.7);
-    /* pre-line : les \n dans les slogans sont rendus comme des retours
-       à la ligne (ex: « Traverser\nc'est prendre l'opposé ! »). */
+    /* pre-line : les \n dans les slogans (ex: « Traverser\nc'est prendre
+       l'opposé ! ») sont rendus comme des retours à la ligne. */
     white-space: pre-line;
     text-align: center;
     animation: slogan-float 1400ms ease-out forwards;
   }
   @keyframes slogan-float {
-    0%   { opacity: 0; transform: translate(-50%, 18px) scale(0.7); }
-    20%  { opacity: 1; transform: translate(-50%, 0)    scale(1.15); }
-    35%  {             transform: translate(-50%, -2px) scale(1);    }
-    100% { opacity: 0; transform: translate(-50%, -36px) scale(1);   }
+    0%   { opacity: 0; transform: translate(-50%, -80%) scale(0.7); }
+    20%  { opacity: 1; transform: translate(-50%, -100%) scale(1.15); }
+    35%  {             transform: translate(-50%, -105%) scale(1);    }
+    100% { opacity: 0; transform: translate(-50%, -150%) scale(1);   }
   }
 
   /* Cœur opaque au point d'origine — court mais bien visible */
