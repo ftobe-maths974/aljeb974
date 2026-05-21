@@ -100,13 +100,6 @@
     <Spotlight />
     <PuffOverlay />
 
-    {#if game.isPending}
-      <div class="pending-bar">
-        <span>{t().pending.message}</span>
-        <button class="cancel" onclick={() => game.cancelPending()}>{t().pending.cancel}</button>
-      </div>
-    {/if}
-
     {#if game.solved && game.state.rhs.length > 0 && !game.victoryReady}
       <Solution />
     {/if}
@@ -175,35 +168,5 @@
   .loading {
     padding: 2rem;
     text-align: center;
-  }
-  .pending-bar {
-    position: absolute;
-    top: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(245, 158, 11, 0.95);
-    color: #0f1722;
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 50;
-    max-width: 90vw;
-    text-align: center;
-  }
-  .pending-bar .cancel {
-    background: rgba(0, 0, 0, 0.15);
-    color: inherit;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-  .pending-bar .cancel:hover {
-    background: rgba(0, 0, 0, 0.3);
   }
 </style>

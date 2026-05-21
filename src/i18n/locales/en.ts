@@ -70,6 +70,7 @@ export const en: Messages = {
     zeroNothing: "Zero is nothing!",
     oneNoChange: "One changes nothing!",
     oppositesCancel: "Opposites cancel out!",
+    balanceRestored: "Balance restored!",
   },
 
   keyLevels: {

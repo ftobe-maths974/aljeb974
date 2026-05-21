@@ -75,6 +75,7 @@ export const fr = {
     zeroNothing: "Zéro c'est rien !",
     oneNoChange: "Un, ça change rien !",
     oppositesCancel: "Les opposés s'annulent !",
+    balanceRestored: "J'équilibre la balance !",
   },
 
   keyLevels: {

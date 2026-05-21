@@ -185,9 +185,25 @@ class GameStore {
         target.side &&
         this.state.pending.remainingTargets.includes(target.side)
       ) {
+        // L'opération va-t-elle clore le pending (dernier côté à servir) ?
+        const willBalance = this.state.pending.remainingTargets.length === 1;
+        const targetSide = target.side;
         this.applyState(completePiocheDrop(this.state, target.side, {
           dropOnce: this.caps.dropOnce,
         }));
+        if (willBalance) {
+          // Le pouf doit apparaître sur la carte qui vient d'être posée
+          // (= la dernière fraction du côté cible), pas au centre du membre.
+          // Petit délai pour laisser la balance revenir à l'équilibre.
+          setTimeout(() => {
+            const after = this.state;
+            if (!after) return;
+            const arr = after[targetSide];
+            const newFrac = arr[arr.length - 1];
+            if (!newFrac) return;
+            fx.spawnPuffOnFraction(newFrac.id, t().fx.balanceRestored);
+          }, 250);
+        }
         return true;
       }
       // Drop interdit : on lève une alerte
