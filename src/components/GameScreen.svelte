@@ -59,7 +59,9 @@
         /* ignoré */
       }
     } else if (isOne(card.atom)) {
-      fx.spawnPuffOnCard(cardId, t().fx.oneNoChange);
+      // Pas de slogan ici (mauvais moment pédagogique selon retour utilisateur).
+      // On garde le pouf pour la satisfaction visuelle.
+      fx.spawnPuffOnCard(cardId);
       try {
         game.deleteOne(cardId);
       } catch {
