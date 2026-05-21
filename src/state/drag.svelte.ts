@@ -60,6 +60,23 @@ class DragStore {
   }
 }
 
+/**
+ * Le browser dispatche un événement `click` synthétique après un `pointerup`,
+ * même quand un drag vient d'avoir lieu. Pour éviter de compter à la fois le
+ * drag ET ce click fantôme, on installe un listener click en CAPTURE one-shot
+ * qui consomme l'événement avant qu'il atteigne le onclick du bouton.
+ */
+function suppressNextClickOn(node: HTMLElement) {
+  const handler = (e: Event) => {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    node.removeEventListener("click", handler, true);
+  };
+  node.addEventListener("click", handler, true);
+  // Fallback : si aucun click n'arrive (release ailleurs), on nettoie.
+  setTimeout(() => node.removeEventListener("click", handler, true), 80);
+}
+
 export const drag = new DragStore();
 
 /* ─── Action : drag d'une Fraction ────────────────────────────────────────── */
@@ -225,6 +242,8 @@ function beginDrag(
       drag.hoverFractionId = null;
       drag.hoverCardId = null;
       drag.hoverSide = null;
+      // Empêche le click synthétique post-pointerup d'être comptabilisé.
+      suppressNextClickOn(node);
       onEnd(ev.clientX, ev.clientY);
     }
   }
