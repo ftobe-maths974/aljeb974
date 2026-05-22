@@ -7,8 +7,9 @@
    * récompenses (game.confirmVictory).
    */
   import { game } from "../state/game.svelte.ts";
-  import { countBeurks, type Atom, type CardInstance, type FractionInstance } from "../lib/engine/index.ts";
+  import { countBeurks, type CardInstance, type FractionInstance } from "../lib/engine/index.ts";
   import { t } from "../i18n/store.svelte.ts";
+  import Card from "./Card.svelte";
 
   /** Renvoie le côté qui CONTIENT la valeur de x (PAS le côté où x est isolé). */
   function findValueSide(): FractionInstance[] | null {
@@ -28,22 +29,17 @@
   const valueSide = $derived(findValueSide() ?? []);
   /** True ssi la valeur de x contient des simplifications oubliées. */
   const messy = $derived(game.state ? countBeurks(game.state) > 0 : false);
-
-  function atomLabel(a: Atom): string {
-    const prefix = a.sign === -1 ? "−" : "";
-    if (a.kind === "unknown") return prefix + "x";
-    if (a.kind === "hole") return prefix + "?";
-    if (a.kind === "literal") return prefix + a.value;
-    return prefix + a.letter;
-  }
-
-  function rowText(cards: CardInstance[]): string {
-    return cards.map((c) => atomLabel(c.atom)).join(" × ");
-  }
 </script>
 
 <div class="solution" role="dialog" aria-live="polite">
   <p class="title" class:messy>{messy ? t().solution.titleMessy : t().solution.title}</p>
+  {#snippet cardRow(cards: CardInstance[])}
+    {#each cards as c, j (c.id)}
+      {#if j > 0}<span class="times">×</span>{/if}
+      <Card card={c} />
+    {/each}
+  {/snippet}
+
   <div class="equation">
     <span class="x">x</span>
     <span class="equals">=</span>
@@ -52,11 +48,11 @@
         {#if i > 0}<span class="plus">+</span>{/if}
         {#if f.denominator && f.denominator.length > 0}
           <span class="frac">
-            <span class="num">{rowText(f.numerator)}</span>
-            <span class="den">{rowText(f.denominator)}</span>
+            <span class="num">{@render cardRow(f.numerator)}</span>
+            <span class="den">{@render cardRow(f.denominator)}</span>
           </span>
         {:else}
-          <span class="single">{rowText(f.numerator)}</span>
+          <span class="single">{@render cardRow(f.numerator)}</span>
         {/if}
       {/each}
     </span>
@@ -128,35 +124,45 @@
     color: var(--fg);
     opacity: 0.85;
   }
-  /* Rendu LaTeX de la valeur */
+  /* Rendu de la valeur en avatars de cartes (respecte le thème + le reveal). */
   .value {
+    --card-size: 2.3rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
     color: var(--fg);
   }
+  /* Cartes non interactives dans la solution. */
+  .value :global(.card) {
+    pointer-events: none;
+  }
   .single {
-    font-size: 1.6rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.3rem;
-    background: rgba(255, 255, 255, 0.06);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
   }
   .frac {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    line-height: 1.1;
-    padding: 0.15rem 0.4rem;
-    border-radius: 0.3rem;
-    background: rgba(255, 255, 255, 0.06);
-    font-size: 1.3rem;
+    gap: 0.25rem;
+  }
+  .frac .num,
+  .frac .den {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
   }
   .frac .num {
-    border-bottom: 2px solid currentColor;
-    padding: 0 0.25rem 0.1rem;
+    border-bottom: 3px solid var(--fg);
+    padding-bottom: 0.3rem;
   }
-  .frac .den {
-    padding: 0.1rem 0.25rem 0;
+  .times {
+    font-size: 1.2rem;
+    font-style: normal;
+    opacity: 0.55;
   }
   .plus {
     font-size: 1.5rem;

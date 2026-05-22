@@ -160,7 +160,8 @@
 
 <style>
   .card {
-    --size: clamp(2.5rem, 8vh, 4rem);
+    /* Surcharge possible par un ancêtre via --card-size (ex: Solution). */
+    --size: var(--card-size, clamp(2.5rem, 8vh, 4rem));
     position: relative;
     width: var(--size);
     height: var(--size);
