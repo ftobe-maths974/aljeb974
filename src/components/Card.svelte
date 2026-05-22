@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { Atom, CardInstance } from "../lib/engine/index.ts";
+  import { shouldRevealAsText } from "../lib/engine/index.ts";
   import { game } from "../state/game.svelte.ts";
   import { drag, draggableCard } from "../state/drag.svelte.ts";
+  import { cardForm } from "../features/card-form/store.svelte.ts";
+  import { emojiFor } from "../features/card-form/emoji.ts";
 
   let {
     card,
@@ -55,6 +58,29 @@
   // Valeur sérialisée pour les sélecteurs d'astuces (ex: "x", "-t", "2", "_")
   const dataValue = $derived(serializedValue(card.atom));
 
+  // ─── Forme de la carte : texte / image / emoji (feature card-form) ──────────
+  // Le `reveal` du niveau (game.revealSet) décide si une carte est dévoilée
+  // (texte) ou « cachée » (sprite). Le mode « text » force tout en texte.
+  const isHole = $derived(card.atom.kind === "hole");
+  const absValue = $derived(dataValue.replace(/^-/, ""));
+  /** Un PNG legacy existe pour les lettres a–z et chiffres 0–9 (signe inclus). */
+  const spriteUrl = $derived(
+    /^-?([a-z]|[0-9])$/.test(dataValue) ? `/cartes/${dataValue}.png` : null,
+  );
+  const emojiGlyph = $derived(emojiFor(absValue));
+  const revealedAsText = $derived(
+    isHole ||
+      cardForm.value === "text" ||
+      shouldRevealAsText(card.atom, game.revealSet),
+  );
+  /** Mode de rendu effectif, avec repli sur "text" si l'asset manque. */
+  const renderMode = $derived.by<"text" | "image" | "emoji">(() => {
+    if (revealedAsText) return "text";
+    if (cardForm.value === "image" && spriteUrl) return "image";
+    if (cardForm.value === "emoji" && emojiGlyph) return "emoji";
+    return "text";
+  });
+
   function serializedValue(a: Atom): string {
     const prefix = a.sign === -1 ? "-" : "";
     if (a.kind === "unknown") return prefix + "x";
@@ -94,11 +120,16 @@
   class:literal={kind === "literal"}
   class:symbol={kind === "symbol"}
   class:neg={isNeg}
+  class:sprite-image={renderMode === "image"}
+  class:sprite-emoji={renderMode === "emoji"}
   class:card-hovered={isCardHovered}
   class:card-dragging={isBeingDragged}
   class:hole-hovered={isHoleHovered}
   data-card-id={card.id}
   data-card-value={dataValue}
+  style={renderMode === "image" && spriteUrl
+    ? `background-image: url(${spriteUrl})`
+    : undefined}
   onclick={handle}
   ondblclick={handleDoubleClick}
   onkeydown={handle}
@@ -113,7 +144,13 @@
       : null
   }
 >
-  <span class="value">{text}</span>
+  {#if renderMode === "image"}
+    <!-- sprite legacy : l'image est en background, pas de glyphe texte -->
+  {:else if renderMode === "emoji"}
+    <span class="value emoji">{emojiGlyph}</span>
+  {:else}
+    <span class="value">{text}</span>
+  {/if}
   {#if showSpotlight}
     <span class="x-spotlight" aria-hidden="true">?</span>
   {/if}
@@ -213,12 +250,67 @@
     transform: scale(1.08);
   }
 
-  /* Marqueur visuel pour les négatifs */
+  /* Marqueur visuel pour les négatifs.
+     Le rendu est piloté par le contrat de variables de la feature
+     opposite-scheme (src/features/opposite-scheme/schemes.ts). Les fallbacks
+     reproduisent le look « couleur » historique : sans schéma actif, rien ne
+     change. */
   .card.neg {
-    background: #fed7aa;
+    background: var(--opp-neg-bg, #fed7aa);
+    border-color: var(--opp-neg-border-color, rgba(0, 0, 0, 0.15));
   }
   .card.neg.x {
-    background: linear-gradient(135deg, #ea580c, #9a3412);
+    background: var(--opp-neg-x-bg, linear-gradient(135deg, #ea580c, #9a3412));
+  }
+  /* Overlay dédié à l'ombre « creuse » (inset) : indépendant du box-shadow de
+     la carte pour ne pas entrer en conflit avec le survol. */
+  .card.neg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--opp-neg-shadow, none);
+    pointer-events: none;
+  }
+  .value {
+    display: inline-block;
+  }
+  /* Opposé sur glyphe TEXTE : couleur / contour / transform. */
+  .card.neg .value:not(.emoji) {
+    color: var(--opp-neg-fg, inherit);
+    -webkit-text-stroke: var(--opp-neg-stroke, 0);
+    transform: var(--opp-neg-transform, none);
+  }
+  /* Opposé sur EMOJI : filtre (les vars couleur/contour n'agissent pas dessus). */
+  .card.neg .value.emoji {
+    filter: var(--opp-neg-filter, none);
+    transform: var(--opp-neg-transform, none);
+  }
+
+  /* ─── Forme « sprite » (feature card-form) ──────────────────────────────── */
+  .value.emoji {
+    font-style: normal;
+    font-size: calc(var(--size) * 0.6);
+    -webkit-text-stroke: 0;
+    line-height: 1;
+  }
+  /* Mode image : sprite PNG legacy en fond, remplit la carte bord à bord
+     (comme le legacy : background-size 100% 100%, pas de marge / frise). */
+  .card.sprite-image {
+    background-color: #ffffff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+  }
+  /* L'asset encode déjà le signe → on neutralise l'effet d'opposé en mode image. */
+  .card.sprite-image.neg {
+    background-color: #ffffff;
+  }
+  .card.sprite-image.neg::after {
+    box-shadow: none;
+  }
+  .card.sprite-image.x {
+    animation: none;
   }
 
   /* Highlight quand la carte est cible d'un drag-carte (simplification) */

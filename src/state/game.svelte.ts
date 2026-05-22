@@ -43,11 +43,13 @@ import {
   locateFraction,
   moveAcross,
   reverseInPioche,
+  revealClosure,
   simplifyFraction,
   stars,
   startPiocheDrop,
   type Capabilities,
   type GameState,
+  type RevealItem,
 } from "../lib/engine/index.ts";
 import levelsData from "../../migration/levels.json";
 import { astuce } from "./astuce.svelte.ts";
@@ -80,6 +82,17 @@ class GameStore {
   loadCounter = $state(0);
 
   caps = $derived<Capabilities>(capabilitiesFor(this.chapter, this.level));
+  /**
+   * Ensemble des symboles « révélés » (affichés en texte) au niveau courant,
+   * opposés inclus. Pilote l'affichage texte vs sprite des cartes
+   * (cf. shouldRevealAsText + feature card-form). Reproduit l'évolution
+   * pédagogique du `reveal` legacy.
+   */
+  revealSet = $derived<ReadonlySet<string>>(
+    revealClosure(
+      findLevel(this.chapter, this.level).reveal as RevealItem[] | undefined,
+    ),
+  );
   solved = $derived(this.state ? isSolved(this.state) : false);
   starsEarned = $derived(this.state ? stars(this.state) : 0);
   /** True quand un drop de pioche est en cours et attend le 2ᵉ geste. */

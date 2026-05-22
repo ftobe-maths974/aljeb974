@@ -3,6 +3,7 @@
   import OrientationGate from "./lib/OrientationGate.svelte";
   import GameScreen from "./components/GameScreen.svelte";
   import LocaleSwitcher from "./components/LocaleSwitcher.svelte";
+  import { CardDisplaySettings } from "./features/card-form";
   import { game } from "./state/game.svelte.ts";
   import { astuce } from "./state/astuce.svelte.ts";
   import { KEY_LEVEL_IDS, getKeyLevel } from "./data/key-levels.ts";
@@ -38,6 +39,7 @@
   {#if screen === "home"}
     <main class="placeholder">
       <div class="lang-corner">
+        <CardDisplaySettings />
         <LocaleSwitcher />
       </div>
       <div class="center-group">
@@ -54,6 +56,7 @@
         <header>
           <h1>Aljeb974</h1>
           <p class="tagline">{t().ui.tagline}</p>
+          <img class="logo" src="/logo.svg" alt="Aljeb974" />
         </header>
       </div>
       <footer>
@@ -68,6 +71,7 @@
         <button class="back" onclick={() => (screen = "home")}>{t().ui.backHome}</button>
         <h2>{t().ui.chooseLevelTitle}</h2>
         <div class="lang-corner-menu">
+          <CardDisplaySettings />
           <LocaleSwitcher />
         </div>
       </header>
@@ -132,6 +136,9 @@
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   /* Le groupe central regroupe status (counts + CTA) et le titre, alignés
      verticalement et centrés dans la page. */
@@ -150,6 +157,9 @@
   }
   .lang-corner-menu {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   h1 {
     font-size: 3rem;
@@ -162,6 +172,12 @@
   .tagline {
     margin: 0.5rem 0 0;
     opacity: 0.75;
+  }
+  .logo {
+    display: block;
+    width: clamp(8rem, 22vh, 14rem);
+    height: auto;
+    margin: 1.25rem auto 0;
   }
   .cta {
     display: flex;
