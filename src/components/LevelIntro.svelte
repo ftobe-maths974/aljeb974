@@ -121,11 +121,12 @@
   }
   .text strong {
     color: var(--accent);
-    font-size: 0.95rem;
+    font-size: 1.15rem;
   }
   .text span {
-    font-size: 0.85rem;
-    opacity: 0.92;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    opacity: 0.95;
   }
   /* « x » de l'énoncé, aligné sur la représentation du plateau. */
   .x-math {
