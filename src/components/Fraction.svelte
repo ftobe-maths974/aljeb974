@@ -44,6 +44,7 @@
 <div
   class="fraction"
   class:has-den={hasDen}
+  class:grabbable={numDraggable || hasDen}
   class:hovered={isHovered}
   class:dragging={isDragging}
   data-fraction-id={fraction.id}
@@ -95,9 +96,23 @@
        s'étire d'un bout à l'autre. */
     align-items: stretch;
     gap: 0.25rem;
-    padding: 0.5rem;
+    padding: 0.5rem 0.3rem;
     border-radius: 0.5rem;
     transition: background 120ms, transform 120ms, box-shadow 120ms;
+  }
+  /* Quand les cartes internes sont draggables (produit ou fraction num/dén),
+     on étend la zone de saisie du TERME entier en HAUTEUR (bandes au-dessus et
+     en-dessous des cartes), pas en largeur. Un overlay blanc très pâle invite à
+     attraper le terme là, sans gêner le d&d interne des cartes. */
+  .fraction.grabbable {
+    padding-top: 1.05rem;
+    padding-bottom: 1.05rem;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    cursor: grab;
+  }
+  .fraction.grabbable:active {
+    cursor: grabbing;
   }
   .row {
     display: flex;
