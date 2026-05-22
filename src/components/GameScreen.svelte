@@ -184,6 +184,10 @@
   }
   .topbar {
     --hue: var(--chapter-hue, 35);
+    /* Au-dessus de la zone de jeu pour que le popover paramètres (ancré dans la
+       topbar) passe DEVANT les cartes. */
+    position: relative;
+    z-index: 50;
     display: flex;
     align-items: center;
     justify-content: space-between;
