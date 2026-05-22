@@ -107,7 +107,7 @@
     100% { transform: translate(-50%, 0);     opacity: 1; }
   }
   .emoji {
-    font-size: 2rem;
+    font-size: 2.6rem;
     line-height: 1;
     flex-shrink: 0;
   }
@@ -121,11 +121,11 @@
   }
   .text strong {
     color: var(--accent);
-    font-size: 1.15rem;
+    font-size: 1.5rem;
   }
   .text span {
-    font-size: 1.05rem;
-    line-height: 1.4;
+    font-size: 1.3rem;
+    line-height: 1.45;
     opacity: 0.95;
   }
   /* « x » de l'énoncé, aligné sur la représentation du plateau. */
