@@ -105,8 +105,8 @@
      en-dessous des cartes), pas en largeur. Un overlay blanc très pâle invite à
      attraper le terme là, sans gêner le d&d interne des cartes. */
   .fraction.grabbable {
-    padding-top: 1.05rem;
-    padding-bottom: 1.05rem;
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
     background: rgba(255, 255, 255, 0.05);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
     cursor: grab;
