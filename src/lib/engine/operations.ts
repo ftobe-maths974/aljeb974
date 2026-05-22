@@ -17,7 +17,7 @@
 
 import { atomsEqual, atomsOpposite, flipSign, isZero, isOne, literalValue, fromLiteral } from "./atoms.ts";
 import type { Atom, Term } from "./dsl.ts";
-import type { EntityId, FractionInstance, GameState, Side } from "./state.ts";
+import type { CardInstance, EntityId, FractionInstance, GameState, Side } from "./state.ts";
 import { locateCard, locateFraction, makeIdSource } from "./state.ts";
 
 /* ─── Gardien : la plupart des op refusent en pending ────────────────────── */
@@ -175,6 +175,9 @@ export function canDeleteOne(state: GameState, cardId: EntityId): boolean {
   const loc = locateCard(state, cardId);
   if (!loc || loc.side === "pioche") return false;
   const frac = state[loc.side][loc.fractionIdx]!;
+  // Numérateur-somme : un « 1 » y est un ADDEND (1+x), pas un facteur → on ne
+  // le supprime pas (1+x ≠ x).
+  if (loc.where === "numerator" && frac.numeratorSumGroups) return false;
   const list = loc.where === "numerator" ? frac.numerator : frac.denominator ?? [];
   const card = list[loc.cardIdx]!;
   if (!isOne(card.atom)) return false;
@@ -418,10 +421,7 @@ export function cancelPending(state: GameState): GameState {
 export function canMoveAcross(state: GameState, fractionId: EntityId): boolean {
   if (state.pending) return false;
   const loc = locateFraction(state, fractionId);
-  if (!loc || (loc.side !== "lhs" && loc.side !== "rhs")) return false;
-  // Une fraction-somme non réduite doit d'abord être réduite.
-  if (state[loc.side][loc.fractionIdx]!.numeratorIsSum) return false;
-  return true;
+  return loc !== null && (loc.side === "lhs" || loc.side === "rhs");
 }
 
 export function moveAcross(state: GameState, fractionId: EntityId): GameState {
@@ -432,13 +432,21 @@ export function moveAcross(state: GameState, fractionId: EntityId): GameState {
   const toSide: "lhs" | "rhs" = fromSide === "lhs" ? "rhs" : "lhs";
   const frac = state[fromSide][loc.fractionIdx]!;
 
-  // inverser le signe du premier atome du numérateur
+  // Inverser le signe : 1ᵉʳ atome de CHAQUE groupe-addend (pour une somme,
+  // -(3x+5) = -3x-5), sinon le 1ᵉʳ atome du produit.
+  const groupStarts = new Set<number>();
+  {
+    let idx = 0;
+    for (const g of frac.numeratorSumGroups ?? [frac.numerator.length]) {
+      groupStarts.add(idx);
+      idx += g;
+    }
+  }
   const flipped: FractionInstance = {
     ...frac,
-    numerator: replaceAt(frac.numerator, 0, {
-      ...frac.numerator[0]!,
-      atom: flipSign(frac.numerator[0]!.atom),
-    }),
+    numerator: frac.numerator.map((c, i) =>
+      groupStarts.has(i) ? { ...c, atom: flipSign(c.atom) } : c,
+    ),
   };
 
   let next = {
@@ -586,11 +594,7 @@ export function canMultiplyAllNum(
 ): boolean {
   if (state.pending) return false;
   const loc = locateFraction(state, piocheFractionId);
-  if (!loc || loc.side !== "pioche") return false;
-  // Pas de multiplication tant qu'une fraction-somme n'est pas réduite
-  // (multiplier ajouterait un facteur au numérateur, ce qui fausserait la somme).
-  const hasSum = [...state.lhs, ...state.rhs].some((f) => f.numeratorIsSum);
-  return !hasSum;
+  return loc !== null && loc.side === "pioche";
 }
 
 export function multiplyAllNum(
@@ -608,6 +612,20 @@ export function multiplyAllNum(
   const ids = makeIdSource(`mul${state.shots + 1}_`);
 
   const appendNum = (f: FractionInstance): FractionInstance => {
+    // Fraction-somme : on DISTRIBUE le facteur sur chaque groupe ((3x+5)·k =
+    // 3x·k + 5·k), en l'ajoutant à la fin de chaque groupe.
+    if (f.numeratorSumGroups) {
+      const newNum: CardInstance[] = [];
+      const newSizes: number[] = [];
+      let idx = 0;
+      for (const g of f.numeratorSumGroups) {
+        newNum.push(...f.numerator.slice(idx, idx + g));
+        newNum.push(...atoms.map((a) => ({ id: ids.next(), atom: a })));
+        newSizes.push(g + atoms.length);
+        idx += g;
+      }
+      return { ...f, numerator: newNum, numeratorSumGroups: newSizes };
+    }
     const additions = atoms.map((a) => ({ id: ids.next(), atom: a }));
     return { ...f, numerator: [...f.numerator, ...additions] };
   };
@@ -693,6 +711,8 @@ export function canSimplifyFraction(
   if (sLoc.side !== tLoc.side || sLoc.fractionIdx !== tLoc.fractionIdx) return false;
   if (sLoc.where === tLoc.where) return false; // un dans num, l'autre dans dén
   const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  // Pas de simplification num↔dén sur un numérateur-somme non réduit.
+  if (frac.numeratorSumGroups) return false;
   const sList = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
   const tList = tLoc.where === "numerator" ? frac.numerator : frac.denominator!;
   return atomsEqual(sList[sLoc.cardIdx]!.atom, tList[tLoc.cardIdx]!.atom);
@@ -750,7 +770,7 @@ export function canMultiplyInFraction(
   if (sLoc.where !== tLoc.where) return false; // doivent être dans la MÊME région
   const frac = state[sLoc.side][sLoc.fractionIdx]!;
   // Numérateur-somme : les cartes s'additionnent (clic), pas se multiplient.
-  if (frac.numeratorIsSum) return false;
+  if (frac.numeratorSumGroups) return false;
   const list = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
   const sCard = list[sLoc.cardIdx]!;
   const tCard = list[tLoc.cardIdx]!;
@@ -968,9 +988,33 @@ function sameDenominator(a: FractionInstance, b: FractionInstance): boolean {
   return da.every((c, i) => atomsEqual(c.atom, db[i]!.atom));
 }
 
+/** Découpe le numérateur (plat) en groupes-addends selon numeratorSumGroups. */
+function numeratorGroups(frac: FractionInstance): CardInstance[][] {
+  const sizes = frac.numeratorSumGroups ?? [frac.numerator.length];
+  const groups: CardInstance[][] = [];
+  let idx = 0;
+  for (const g of sizes) {
+    groups.push(frac.numerator.slice(idx, idx + g));
+    idx += g;
+  }
+  return groups;
+}
+
+/** Clé littérale de chaque groupe, ou null si un groupe n'est pas réductible. */
+function numeratorGroupKeys(frac: FractionInstance): string[] | null {
+  const keys: string[] = [];
+  for (const g of numeratorGroups(frac)) {
+    const s = splitAtoms(g.map((c) => c.atom));
+    if (!s) return null;
+    keys.push(s.key);
+  }
+  return keys;
+}
+
 /**
- * Drop d'une fraction `m/D` sur une fraction `n/D` (même dénominateur, et
- * numérateurs littéraux) → `(m+n)/D`. Le dragué disparaît.
+ * Drop d'une fraction sur une autre de MÊME dénominateur → on concatène les
+ * numérateurs en SOMME NON CALCULÉE sur le dénominateur commun (ex.
+ * 3x/2 + 5/2 → (3x+5)/2). Numérateurs quelconques. L'élève réduit au clic.
  */
 export function canAddFractions(
   state: GameState,
@@ -985,10 +1029,7 @@ export function canAddFractions(
   if (dl.side !== tl.side || dl.side === "pioche") return false;
   const dFrac = state[dl.side][dl.fractionIdx]!;
   const tFrac = state[tl.side][tl.fractionIdx]!;
-  if (dFrac.numerator.length !== 1 || tFrac.numerator.length !== 1) return false;
-  if (dFrac.numerator[0]!.atom.kind !== "literal" || tFrac.numerator[0]!.atom.kind !== "literal") {
-    return false;
-  }
+  if (!dFrac.denominator || !tFrac.denominator) return false;
   return sameDenominator(dFrac, tFrac);
 }
 
@@ -1005,17 +1046,20 @@ export function addFractions(
   const tl = locateFraction(state, targetFractionId)!;
   const dFrac = state[dl.side][dl.fractionIdx]!;
   const tFrac = state[tl.side][tl.fractionIdx]!;
-  // On NE calcule PAS : on CONCATÈNE les numérateurs en somme non réduite
-  // (cible + dragué), sur le dénominateur commun. L'élève réduira au clic.
   const ids = makeIdSource(`af${state.shots + 1}_`);
+  const clone = (c: CardInstance): CardInstance => ({ id: ids.next(), atom: c.atom });
+  // Concatène dragué puis cible (lecture gauche→droite). Les groupes existants
+  // (si déjà des sommes) sont préservés.
+  const numerator = [...dFrac.numerator.map(clone), ...tFrac.numerator.map(clone)];
+  const numeratorSumGroups = [
+    ...(dFrac.numeratorSumGroups ?? [dFrac.numerator.length]),
+    ...(tFrac.numeratorSumGroups ?? [tFrac.numerator.length]),
+  ];
   const newTarget: FractionInstance = {
     id: tFrac.id,
-    numerator: [
-      { id: ids.next(), atom: dFrac.numerator[0]!.atom }, // dragué
-      { id: tFrac.numerator[0]!.id, atom: tFrac.numerator[0]!.atom }, // cible
-    ],
+    numerator,
     denominator: tFrac.denominator,
-    numeratorIsSum: true,
+    numeratorSumGroups,
   };
   const next = { ...state };
   return updateSide(next, dl.side, (fs) => {
@@ -1025,14 +1069,18 @@ export function addFractions(
   });
 }
 
-/* ─── 9.7. Réduction d'un numérateur-somme (clic : 3+2 → 5) ─────────────────── */
+/* ─── 9.7. Réduction d'un numérateur-somme (clic : combine les termes semblables) */
 
 export function canReduceNumeratorSum(state: GameState, cardId: EntityId): boolean {
   if (state.pending) return false;
   const loc = locateCard(state, cardId);
   if (!loc || loc.side === "pioche" || loc.where !== "numerator") return false;
   const frac = state[loc.side][loc.fractionIdx]!;
-  return !!frac.numeratorIsSum && frac.numerator.length >= 2;
+  if (!frac.numeratorSumGroups || frac.numeratorSumGroups.length < 2) return false;
+  const keys = numeratorGroupKeys(frac);
+  if (!keys) return false;
+  // Réductible s'il existe au moins deux groupes de même clé.
+  return new Set(keys).size < keys.length;
 }
 
 export function reduceNumeratorSum(state: GameState, cardId: EntityId): GameState {
@@ -1042,12 +1090,26 @@ export function reduceNumeratorSum(state: GameState, cardId: EntityId): GameStat
   }
   const loc = locateCard(state, cardId)!;
   const frac = state[loc.side][loc.fractionIdx]!;
-  const sum = frac.numerator.reduce((acc, c) => acc + literalValue(c.atom), 0);
+  // Combine les groupes de même clé (ordre de 1ʳᵉ apparition), somme des coefs.
+  const order: string[] = [];
+  const acc = new Map<string, { coef: number; symbolic: Atom[] }>();
+  for (const g of numeratorGroups(frac)) {
+    const s = splitAtoms(g.map((c) => c.atom))!;
+    if (!acc.has(s.key)) {
+      acc.set(s.key, { coef: 0, symbolic: s.symbolic });
+      order.push(s.key);
+    }
+    acc.get(s.key)!.coef += s.coef;
+  }
   const ids = makeIdSource(`rn${state.shots + 1}_`);
+  const groupAtoms = order.map((k) => buildTermAtoms(acc.get(k)!.coef, acc.get(k)!.symbolic));
+  const numerator = groupAtoms.flat().map((a) => ({ id: ids.next(), atom: a }));
+  const sizes = groupAtoms.map((g) => g.length);
   const reduced: FractionInstance = {
     id: frac.id,
-    numerator: [{ id: ids.next(), atom: fromLiteral(sum) }],
+    numerator,
     denominator: frac.denominator,
+    numeratorSumGroups: sizes.length > 1 ? sizes : undefined,
   };
   return updateSide(state, loc.side, (fs) => replaceAt(fs, loc.fractionIdx, reduced));
 }
@@ -1059,14 +1121,14 @@ export function reduceNumeratorSum(state: GameState, cardId: EntityId): GameStat
  * littérale ordonnée sign-strippée). Renvoie null si le terme a un dénominateur
  * ou contient un trou.
  */
-function splitTerm(
-  frac: FractionInstance,
+/** Décompose un PRODUIT d'atomes en (coef numérique, clé littérale ordonnée,
+ *  partie symbolique sign-strippée). null si un atome est un trou. */
+function splitAtoms(
+  atoms: Atom[],
 ): { coef: number; key: string; symbolic: Atom[] } | null {
-  if (frac.denominator || frac.numeratorIsSum) return null;
   let coef = 1;
   const symbolic: Atom[] = [];
-  for (const c of frac.numerator) {
-    const a = c.atom;
+  for (const a of atoms) {
     if (a.kind === "literal") {
       coef *= a.sign * a.value;
     } else if (a.kind === "unknown" || a.kind === "symbol") {
@@ -1080,6 +1142,24 @@ function splitTerm(
     .map((a) => (a.kind === "unknown" ? "x" : (a as { letter: string }).letter))
     .join(".");
   return { coef, key, symbolic };
+}
+
+/** Atomes d'un terme depuis (coef, partie symbolique), normalisé : coef ±1
+ *  implicite, coef 0 → littéral 0, partie pure → littéral. */
+function buildTermAtoms(coef: number, symbolic: Atom[]): Atom[] {
+  if (symbolic.length === 0 || coef === 0) return [fromLiteral(coef)];
+  if (coef === 1) return symbolic.map((a) => ({ ...a }));
+  if (coef === -1) {
+    return symbolic.map((a, i) => (i === 0 ? { ...a, sign: -1 as const } : { ...a }));
+  }
+  return [fromLiteral(coef), ...symbolic.map((a) => ({ ...a }))];
+}
+
+function splitTerm(
+  frac: FractionInstance,
+): { coef: number; key: string; symbolic: Atom[] } | null {
+  if (frac.denominator || frac.numeratorSumGroups) return null;
+  return splitAtoms(frac.numerator.map((c) => c.atom));
 }
 
 /**

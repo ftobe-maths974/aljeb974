@@ -36,10 +36,25 @@
    * bloquerait le crossPower.
    */
   const numDraggable = $derived(
-    !fraction.numeratorIsSum &&
+    !fraction.numeratorSumGroups &&
       (game.caps.multPower || game.caps.negPower) &&
       fraction.numerator.length > 1,
   );
+
+  /**
+   * Indices du numérateur où commence un nouveau groupe-addend (somme) → on y
+   * affiche « + » au lieu de « · ». Vide si numérateur produit normal.
+   */
+  const groupStartIndices = $derived.by<Set<number>>(() => {
+    const set = new Set<number>();
+    if (!fraction.numeratorSumGroups) return set;
+    let idx = 0;
+    for (const g of fraction.numeratorSumGroups) {
+      set.add(idx);
+      idx += g;
+    }
+    return set;
+  });
 
   // Notation du produit : « × » au début, puis « · » (point de multiplication)
   // dès que le superpouvoir multiplication est débloqué (niveau 4-8), et
@@ -60,9 +75,10 @@
   }}
 >
   <div class="row numerator" data-region="numerator">
-    {#each fraction.numerator as card (card.id)}
-      {#if card !== fraction.numerator[0]}
-        <span class="mult-dot" class:plus={fraction.numeratorIsSum} aria-hidden="true">{fraction.numeratorIsSum ? "+" : multSign}</span>
+    {#each fraction.numerator as card, ni (card.id)}
+      {#if ni > 0}
+        {@const isPlus = groupStartIndices.has(ni)}
+        <span class="mult-dot" class:plus={isPlus} aria-hidden="true">{isPlus ? "+" : multSign}</span>
       {/if}
       <Card
         {card}

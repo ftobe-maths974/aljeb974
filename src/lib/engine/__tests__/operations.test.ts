@@ -209,7 +209,7 @@ describe("addFractions", () => {
     const s2 = addFractions(s, dragged, target);
     expect(s2.lhs.length).toBe(2); // une fraction de moins
     const sum = s2.lhs[0]!;
-    expect(sum.numeratorIsSum).toBe(true);
+    expect(sum.numeratorSumGroups).toEqual([1, 1]);
     expect(sum.numerator).toHaveLength(2); // 3 et 2 concaténés, non calculés
     expect((sum.numerator[0]!.atom as { value: number }).value).toBe(3);
     expect((sum.numerator[1]!.atom as { value: number }).value).toBe(2);
@@ -220,10 +220,23 @@ describe("addFractions", () => {
     expect(canReduceNumeratorSum(s2, reduceId)).toBe(true);
     const s3 = reduceNumeratorSum(s2, reduceId);
     const red = s3.lhs[0]!;
-    expect(red.numeratorIsSum).toBeFalsy();
+    expect(red.numeratorSumGroups).toBeUndefined();
     expect(red.numerator).toHaveLength(1);
     expect((red.numerator[0]!.atom as { value: number }).value).toBe(5);
     expect(red.denominator?.[0]!.atom.kind).toBe("symbol");
+  });
+
+  it("fusionne des numérateurs quelconques (3x/2 + 5/2 → (3x+5)/2)", () => {
+    const s = initialState(lvl({ lhs: ["3.x/2", "5/2"], shots: 9 }), "test");
+    const dragged = s.lhs[0]!.id;
+    const target = s.lhs[1]!.id;
+    expect(canAddFractions(s, dragged, target)).toBe(true);
+    const s2 = addFractions(s, dragged, target);
+    const sum = s2.lhs[0]!;
+    expect(sum.numeratorSumGroups).toEqual([2, 1]); // groupe 3·x puis 5
+    expect(sum.numerator).toHaveLength(3);
+    // non réductible (3x et 5 ne sont pas semblables)
+    expect(canReduceNumeratorSum(s2, sum.numerator[0]!.id)).toBe(false);
   });
 
   it("refuse si les dénominateurs diffèrent", () => {

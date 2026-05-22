@@ -47,12 +47,13 @@ export interface FractionInstance {
   numerator: CardInstance[];
   denominator?: CardInstance[];
   /**
-   * État transitoire : le numérateur est une SOMME NON CALCULÉE (chaque carte
-   * est un addend littéral, à additionner), issue de la fusion de fractions de
-   * même dénominateur. L'élève clique pour réduire. Tant que true, la fraction
-   * n'est éligible qu'à la réduction (les autres opérations la refusent).
+   * Numérateur = SOMME NON CALCULÉE de plusieurs termes (issue de la fusion de
+   * fractions de même dénominateur, ex. 3x/2 + 5/2 → (3x+5)/2). `numerator`
+   * reste plat (tous les atomes à la suite) ; ce tableau donne la TAILLE de
+   * chaque groupe-addend (somme des tailles = numerator.length). Rendu : « + »
+   * entre groupes, « · » à l'intérieur. Undefined = numérateur produit normal.
    */
-  numeratorIsSum?: boolean;
+  numeratorSumGroups?: number[];
 }
 
 /** Désigne un côté de l'équation. */
