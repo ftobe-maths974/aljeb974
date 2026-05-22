@@ -4,7 +4,9 @@ import {
   addTerms,
   canAddFractions,
   canAddTerms,
+  canClearOneDenominator,
   canClearZeroDenominator,
+  clearOneDenominator,
   clearZeroDenominator,
   cancelOpposites,
   cancelPending,
@@ -256,5 +258,21 @@ describe("clearZeroDenominator", () => {
   it("refuse si le numérateur n'est pas 0", () => {
     const s = initialState(lvl({ lhs: ["2/p", "x"], shots: 9 }), "test");
     expect(canClearZeroDenominator(s, s.lhs[0]!.numerator[0]!.id)).toBe(false);
+  });
+});
+
+describe("clearOneDenominator", () => {
+  it("x/1 : un clic sur le dénominateur 1 le fait disparaître", () => {
+    const s = initialState(lvl({ lhs: ["x/1", "t"], shots: 9 }), "test");
+    const oneId = s.lhs[0]!.denominator![0]!.id;
+    expect(canClearOneDenominator(s, oneId)).toBe(true);
+    const s2 = clearOneDenominator(s, oneId);
+    expect(s2.lhs[0]!.denominator).toBeUndefined();
+    expect(s2.lhs[0]!.numerator[0]!.atom.kind).toBe("unknown");
+  });
+
+  it("refuse si le dénominateur n'est pas 1", () => {
+    const s = initialState(lvl({ lhs: ["x/2", "t"], shots: 9 }), "test");
+    expect(canClearOneDenominator(s, s.lhs[0]!.denominator![0]!.id)).toBe(false);
   });
 });

@@ -132,6 +132,33 @@ export function clearZeroDenominator(state: GameState, cardId: EntityId): GameSt
   });
 }
 
+/**
+ * Fraction `… / 1` : dénominateur = un seul « 1 » positif. Diviser par 1 ne
+ * change rien → un clic fait disparaître le dénominateur (x/1 → x).
+ */
+export function canClearOneDenominator(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
+  const loc = locateCard(state, cardId);
+  if (!loc || loc.side === "pioche" || loc.where !== "denominator") return false;
+  const frac = state[loc.side][loc.fractionIdx]!;
+  const den = frac.denominator;
+  if (!den || den.length !== 1) return false;
+  const a = den[0]!.atom;
+  return isOne(a) && a.sign === 1;
+}
+
+export function clearOneDenominator(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "clearOneDenominator");
+  if (!canClearOneDenominator(state, cardId)) {
+    throw new Error("clearOneDenominator illégale");
+  }
+  const loc = locateCard(state, cardId)!;
+  return updateSide(state, loc.side, (fs) => {
+    const frac = fs[loc.fractionIdx]!;
+    return replaceAt(fs, loc.fractionIdx, { ...frac, denominator: undefined });
+  });
+}
+
 /* ─── 2. Élimination d'un 1 multiplicatif inutile ────────────────────────── */
 
 /**

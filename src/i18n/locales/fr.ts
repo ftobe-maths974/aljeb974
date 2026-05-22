@@ -76,6 +76,8 @@ export const fr = {
 
   fx: {
     zeroNothing: "Zéro c'est rien !",
+    zeroDivideNothing: "Diviser rien, c'est toujours rien !",
+    divideByOne: "Diviser ÷1 ne change rien !",
     oneNoChange: "×1 ne change rien !",
     oppositesCancel: "Les opposés s'annulent !",
     balanceRestored: "J'équilibre la balance !",

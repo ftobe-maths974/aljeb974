@@ -87,16 +87,26 @@
       return;
     }
     if (isZero(card.atom)) {
-      fx.spawnPuffOnCard(cardId, t().fx.zeroNothing);
       try {
         // Fraction 0/d : 1er clic = retire le dénominateur (0/d → 0) ; le clic
         // suivant supprimera le zéro.
-        if (game.canClearZeroDenominator(cardId)) game.clearZeroDenominator(cardId);
-        else game.deleteZero(cardId);
+        if (game.canClearZeroDenominator(cardId)) {
+          fx.spawnPuffOnCard(cardId, t().fx.zeroDivideNothing);
+          game.clearZeroDenominator(cardId);
+        } else {
+          fx.spawnPuffOnCard(cardId, t().fx.zeroNothing);
+          game.deleteZero(cardId);
+        }
       } catch {
         /* ignoré */
       }
     } else if (isOne(card.atom) && card.atom.sign === 1) {
+      // Dénominateur « 1 » seul → diviser par 1 ne change rien (x/1 → x).
+      if (game.canClearOneDenominator(cardId)) {
+        fx.spawnPuffOnCard(cardId, t().fx.divideByOne);
+        game.clearOneDenominator(cardId);
+        return;
+      }
       // « 1 » multiplicatif (positif) : superpower depuis le niveau 2-5.
       // Le « -1 » n'a pas ce comportement (il sert au negPower au chap. 5+).
       const unlocked = game.chapter > 2 || (game.chapter === 2 && game.level >= 5);

@@ -73,6 +73,8 @@ export const rcf: Messages = {
 
   fx: {
     zeroNothing: "Zéro lé ryin !",
+    zeroDivideNothing: "Divizé ryin, lé touzour ryin !",
+    divideByOne: "Divizé ÷1 i sanj ryin !",
     oneNoChange: "×1 i sanj ryin !",
     oppositesCancel: "Bann opozé i anil azot !",
     balanceRestored: "Mi ékilib la balans !",
