@@ -72,7 +72,7 @@ export const en: Messages = {
   fx: {
     zeroNothing: "Zero is nothing!",
     zeroDivideNothing: "Dividing nothing is still nothing!",
-    divideByOne: "Dividing ÷1 changes nothing!",
+    divideByOne: "÷1 changes nothing!",
     oneNoChange: "×1 changes nothing!",
     oppositesCancel: "Opposites cancel out!",
     balanceRestored: "Balance restored!",

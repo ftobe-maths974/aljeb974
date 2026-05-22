@@ -75,7 +75,7 @@ export const kwz: Messages = {
   fx: {
     zeroNothing: "Zéro lé aryen !",
     zeroDivideNothing: "Divizé aryen, lé toujour aryen !",
-    divideByOne: "Divizé ÷1 i sanj aryen !",
+    divideByOne: "÷1 i sanj aryen !",
     oneNoChange: "×1 i sanj aryen !",
     oppositesCancel: "Bann opozé i anil azot !",
     balanceRestored: "Mi ékilib la balans !",

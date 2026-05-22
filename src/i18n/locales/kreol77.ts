@@ -75,7 +75,7 @@ export const kreol77: Messages = {
   fx: {
     zeroNothing: "Zéro lé arien !",
     zeroDivideNothing: "Divizé arien, lé toujour arien !",
-    divideByOne: "Divizé ÷1 i sanj arien !",
+    divideByOne: "÷1 i sanj arien !",
     oneNoChange: "×1 i sanj arien !",
     oppositesCancel: "Bann opozé i anil azot !",
     balanceRestored: "Mi ékilib la balans !",
