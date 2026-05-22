@@ -326,8 +326,29 @@
   .card.sprite-emoji:not(.x) {
     background: #ffffff;
   }
+  /* Opposé du dragon (−x) en emoji : « dragon d'ombre » — même dragon, fond
+     sombre + lueur froide (bleu/violet) au lieu du halo flamboyant. */
   .card.sprite-emoji.neg.x {
-    background: linear-gradient(135deg, #f59e0b, #fb923c);
+    background: linear-gradient(135deg, #312e81, #0b1020);
+    border-color: rgba(148, 163, 233, 0.3);
+    animation: x-glow-cold 4.5s ease-in-out infinite;
+  }
+  /* Le dragon garde ses couleurs (pas de filtre/retournement du schéma). */
+  .card.sprite-emoji.neg.x .value.emoji {
+    filter: none;
+    transform: none;
+  }
+  @keyframes x-glow-cold {
+    0%, 100% {
+      box-shadow:
+        0 0 7px 1px rgba(99, 102, 241, 0.45),
+        0 0 15px 3px rgba(139, 92, 246, 0.22);
+    }
+    50% {
+      box-shadow:
+        0 0 15px 4px rgba(99, 102, 241, 0.78),
+        0 0 30px 9px rgba(139, 92, 246, 0.45);
+    }
   }
   .card.sprite-emoji.neg::after {
     box-shadow: none;
