@@ -155,6 +155,8 @@ export interface Capabilities {
   multPower: boolean;
   /** Drop nombre sur nombre opposé = addition numérique. */
   addPower: boolean;
+  /** Drop fraction sur fraction de même dénominateur = addition des numérateurs. */
+  addFractionPower: boolean;
   /** Clic sur nombre > 3 = décomposition en facteurs premiers. */
   primeFactorPower: boolean;
   /** Clic sur carte sélectionnée puis appliquer `-1` ailleurs. */
@@ -180,6 +182,7 @@ export function capabilitiesFor(chapter: number, level: number): Capabilities {
     crossPower:       at(3, 1),
     dropnumPower:     at(3, 7),
     addPower:         at(4, 1),
+    addFractionPower: at(4, 1),
     primeFactorPower: at(4, 4),
     multPower:        at(4, 8),
     negPower:         at(5, 1),

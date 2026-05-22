@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  addFractions,
+  canAddFractions,
   cancelOpposites,
   cancelPending,
   canCancelOpposites,
@@ -187,5 +189,26 @@ describe("moveAcross", () => {
     expect(s2.rhs.length).toBe(1);
     expect(s2.rhs[0]!.numerator[0]!.atom.kind).toBe("literal");
     expect((s2.rhs[0]!.numerator[0]!.atom as { value: number }).value).toBe(0);
+  });
+});
+
+describe("addFractions", () => {
+  it("additionne deux fractions de même dénominateur (3/p + 2/p = 5/p)", () => {
+    const s = initialState(lvl({ lhs: ["3/p", "2/p", "x"], shots: 9 }), "test");
+    const dragged = s.lhs[0]!.id;
+    const target = s.lhs[1]!.id;
+    expect(canAddFractions(s, dragged, target)).toBe(true);
+    const s2 = addFractions(s, dragged, target);
+    expect(s2.lhs.length).toBe(2); // une fraction de moins
+    const sum = s2.lhs[0]!;
+    expect(sum.numerator).toHaveLength(1);
+    expect(sum.numerator[0]!.atom.kind).toBe("literal");
+    expect((sum.numerator[0]!.atom as { value: number }).value).toBe(5);
+    expect(sum.denominator?.[0]!.atom.kind).toBe("symbol");
+  });
+
+  it("refuse si les dénominateurs diffèrent", () => {
+    const s = initialState(lvl({ lhs: ["3/p", "2/q"], shots: 9 }), "test");
+    expect(canAddFractions(s, s.lhs[0]!.id, s.lhs[1]!.id)).toBe(false);
   });
 });

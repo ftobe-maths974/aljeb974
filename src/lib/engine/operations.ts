@@ -894,3 +894,63 @@ export function addLiterals(
     return replaceAt(removed, newTargetIdx, newTarget);
   });
 }
+
+/* ─── 9.5. Addition de fractions de même dénominateur (addFractionPower) ───── */
+
+/** Deux fractions ont-elles exactement le même dénominateur (produit d'atomes) ? */
+function sameDenominator(a: FractionInstance, b: FractionInstance): boolean {
+  const da = a.denominator;
+  const db = b.denominator;
+  if (!da || !db || da.length !== db.length) return false;
+  return da.every((c, i) => atomsEqual(c.atom, db[i]!.atom));
+}
+
+/**
+ * Drop d'une fraction `m/D` sur une fraction `n/D` (même dénominateur, et
+ * numérateurs littéraux) → `(m+n)/D`. Le dragué disparaît.
+ */
+export function canAddFractions(
+  state: GameState,
+  draggedFractionId: EntityId,
+  targetFractionId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  if (draggedFractionId === targetFractionId) return false;
+  const dl = locateFraction(state, draggedFractionId);
+  const tl = locateFraction(state, targetFractionId);
+  if (!dl || !tl) return false;
+  if (dl.side !== tl.side || dl.side === "pioche") return false;
+  const dFrac = state[dl.side][dl.fractionIdx]!;
+  const tFrac = state[tl.side][tl.fractionIdx]!;
+  if (dFrac.numerator.length !== 1 || tFrac.numerator.length !== 1) return false;
+  if (dFrac.numerator[0]!.atom.kind !== "literal" || tFrac.numerator[0]!.atom.kind !== "literal") {
+    return false;
+  }
+  return sameDenominator(dFrac, tFrac);
+}
+
+export function addFractions(
+  state: GameState,
+  draggedFractionId: EntityId,
+  targetFractionId: EntityId,
+): GameState {
+  ensureNotPending(state, "addFractions");
+  if (!canAddFractions(state, draggedFractionId, targetFractionId)) {
+    throw new Error("addFractions illégale");
+  }
+  const dl = locateFraction(state, draggedFractionId)!;
+  const tl = locateFraction(state, targetFractionId)!;
+  const dFrac = state[dl.side][dl.fractionIdx]!;
+  const tFrac = state[tl.side][tl.fractionIdx]!;
+  const sum = literalValue(dFrac.numerator[0]!.atom) + literalValue(tFrac.numerator[0]!.atom);
+  const newTarget: FractionInstance = {
+    ...tFrac, // conserve le dénominateur
+    numerator: [{ id: tFrac.numerator[0]!.id, atom: fromLiteral(sum) }],
+  };
+  const next = { ...state };
+  return updateSide(next, dl.side, (fs) => {
+    const removed = removeAt(fs, dl.fractionIdx);
+    const newTargetIdx = dl.fractionIdx < tl.fractionIdx ? tl.fractionIdx - 1 : tl.fractionIdx;
+    return replaceAt(removed, newTargetIdx, newTarget);
+  });
+}
