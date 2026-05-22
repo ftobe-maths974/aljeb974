@@ -38,10 +38,12 @@
 
 <OrientationGate>
   <FullscreenButton />
+  <div class="settings-corner">
+    <CardDisplaySettings />
+  </div>
   {#if screen === "home"}
     <main class="placeholder">
       <div class="lang-corner">
-        <CardDisplaySettings />
         <LocaleSwitcher />
       </div>
       <div class="center-group">
@@ -73,7 +75,6 @@
         <button class="back" onclick={() => (screen = "home")}>{t().ui.backHome}</button>
         <h2>{t().ui.chooseLevelTitle}</h2>
         <div class="lang-corner-menu">
-          <CardDisplaySettings />
           <LocaleSwitcher />
         </div>
       </header>
@@ -134,10 +135,18 @@
       ),
       url("/renyon.1.jpg") center / cover no-repeat;
   }
+  /* Bouton paramètres global, fixé en haut à droite (visible sur tous les écrans). */
+  .settings-corner {
+    position: fixed;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 1000;
+  }
   .lang-corner {
     position: absolute;
     top: 0.75rem;
-    right: 0.75rem;
+    /* décalé pour laisser place au bouton paramètres fixe. */
+    right: 3.1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -238,8 +247,8 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    /* padding-left pour ne pas passer sous le bouton plein écran (coin haut-gauche). */
-    padding: 0.25rem 0 1rem 2.6rem;
+    /* padding latéral : bouton plein écran à gauche, bouton paramètres à droite. */
+    padding: 0.25rem 2.6rem 1rem 2.6rem;
     position: sticky;
     top: 0;
     z-index: 5;
