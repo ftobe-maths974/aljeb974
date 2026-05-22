@@ -126,10 +126,6 @@
       </div>
     </header>
 
-    {#if isSandbox(game.chapter, game.level)}
-      <SandboxControls />
-    {/if}
-
     <main class="play-area">
       <div class="balance-group">
         <Side fractions={game.state.lhs} name="lhs" onCardClick={handleCardClick} onCardDoubleClick={handleCardDoubleClick} onDrop={handleDrop} onCardDrop={handleCardDrop} />
@@ -144,9 +140,14 @@
       </div>
     </main>
 
-    {#if game.state.pioche.length > 0}
+    {#if game.state.pioche.length > 0 || isSandbox(game.chapter, game.level)}
       <footer class="pioche-bar">
-        <Side fractions={game.state.pioche} name="pioche" onCardClick={handleCardClick} onDrop={handleDrop} />
+        {#if isSandbox(game.chapter, game.level)}
+          <SandboxControls />
+        {/if}
+        {#if game.state.pioche.length > 0}
+          <Side fractions={game.state.pioche} name="pioche" onCardClick={handleCardClick} onDrop={handleDrop} />
+        {/if}
       </footer>
     {/if}
 
@@ -308,6 +309,14 @@
   }
   .pioche-bar {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  /* La pioche occupe l'espace restant à droite des outils sandbox. */
+  .pioche-bar :global(.side.pioche) {
+    flex: 1;
+    min-width: 0;
   }
   .loading {
     padding: 2rem;

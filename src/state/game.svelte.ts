@@ -41,13 +41,17 @@ import {
   initialState,
   isSolved,
   locateFraction,
+  makeIdSource,
   moveAcross,
   reverseInPioche,
   revealClosure,
+  serializeAtom,
   simplifyFraction,
   stars,
   startPiocheDrop,
+  type Atom,
   type Capabilities,
+  type FractionInstance,
   type GameState,
   type RevealItem,
 } from "../lib/engine/index.ts";
@@ -160,6 +164,42 @@ class GameStore {
     }
     this.victoryReady = false;
     astuce.stop();
+  }
+
+  /**
+   * Sandbox : ajoute/retire une carte (atome unique) dans la banque (pioche).
+   * Unique par valeur sérialisée ; re-clic = retrait.
+   */
+  togglePiocheItem(atom: Atom) {
+    if (!this.state) return;
+    const val = serializeAtom(atom);
+    const same = (f: FractionInstance) =>
+      !f.denominator &&
+      f.numerator.length === 1 &&
+      serializeAtom(f.numerator[0]!.atom) === val;
+    let pioche: FractionInstance[];
+    if (this.state.pioche.some(same)) {
+      pioche = this.state.pioche.filter((f) => !same(f));
+    } else {
+      const ids = makeIdSource(`sb${this.loadCounter}_${this.state.pioche.length}_`);
+      pioche = [
+        ...this.state.pioche,
+        { id: ids.next(), numerator: [{ id: ids.next(), atom: { ...atom } }] },
+      ];
+    }
+    this.state = { ...this.state, pioche };
+  }
+
+  /** Sandbox : la valeur sérialisée est-elle déjà dans la banque ? */
+  piocheHas(atom: Atom): boolean {
+    if (!this.state) return false;
+    const val = serializeAtom(atom);
+    return this.state.pioche.some(
+      (f) =>
+        !f.denominator &&
+        f.numerator.length === 1 &&
+        serializeAtom(f.numerator[0]!.atom) === val,
+    );
   }
 
   /**
