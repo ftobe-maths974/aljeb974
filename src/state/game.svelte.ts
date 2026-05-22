@@ -32,9 +32,11 @@ import {
   canFactorize,
   canFillHole,
   canMultiplyInFraction,
+  canClearZeroDenominator,
   canReverseInPioche,
   canSimplifyFraction,
   capabilitiesFor,
+  clearZeroDenominator,
   completePiocheDrop,
   factorize,
   divideAll,
@@ -259,6 +261,21 @@ class GameStore {
       return;
     }
     this.applyState(deleteZero(this.state, cardId));
+  }
+
+  /** Fraction 0/d : retire le dénominateur (0/d → 0). */
+  clearZeroDenominator(cardId: string) {
+    if (!this.state) return;
+    if (this.state.pending) {
+      this.flashAlert();
+      return;
+    }
+    this.applyState(clearZeroDenominator(this.state, cardId));
+  }
+
+  /** Le clic sur ce zéro doit-il d'abord retirer le dénominateur (0/d) ? */
+  canClearZeroDenominator(cardId: string): boolean {
+    return this.state ? canClearZeroDenominator(this.state, cardId) : false;
   }
 
   deleteOne(cardId: string) {

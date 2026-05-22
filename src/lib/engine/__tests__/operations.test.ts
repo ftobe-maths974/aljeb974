@@ -4,6 +4,8 @@ import {
   addTerms,
   canAddFractions,
   canAddTerms,
+  canClearZeroDenominator,
+  clearZeroDenominator,
   cancelOpposites,
   cancelPending,
   canCancelOpposites,
@@ -237,5 +239,22 @@ describe("addTerms", () => {
   it("refuse une forme non identique (xt vs tx)", () => {
     const s = initialState(lvl({ lhs: ["x.t", "t.x"], shots: 9 }), "test");
     expect(canAddTerms(s, s.lhs[0]!.id, s.lhs[1]!.id)).toBe(false);
+  });
+});
+
+describe("clearZeroDenominator", () => {
+  it("0/d : un clic retire le dénominateur, puis deleteZero devient possible", () => {
+    const s = initialState(lvl({ lhs: ["0/p", "x"], shots: 9 }), "test");
+    const zeroId = s.lhs[0]!.numerator[0]!.id;
+    expect(canClearZeroDenominator(s, zeroId)).toBe(true);
+    expect(canDeleteZero(s, zeroId)).toBe(false); // bloqué tant qu'il y a un dén.
+    const s2 = clearZeroDenominator(s, zeroId);
+    expect(s2.lhs[0]!.denominator).toBeUndefined();
+    expect(canDeleteZero(s2, s2.lhs[0]!.numerator[0]!.id)).toBe(true);
+  });
+
+  it("refuse si le numérateur n'est pas 0", () => {
+    const s = initialState(lvl({ lhs: ["2/p", "x"], shots: 9 }), "test");
+    expect(canClearZeroDenominator(s, s.lhs[0]!.numerator[0]!.id)).toBe(false);
   });
 });

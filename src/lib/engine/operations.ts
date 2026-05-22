@@ -105,6 +105,33 @@ export function deleteZero(state: GameState, cardId: EntityId): GameState {
   return updateSide(state, loc.side, (fs) => removeAt(fs, loc.fractionIdx));
 }
 
+/**
+ * Fraction `0 / d` : numérateur = un seul zéro, avec dénominateur. Comme
+ * 0 ÷ (quoi que ce soit) = 0, un clic FAIT DISPARAÎTRE le dénominateur
+ * (0/d → 0) ; un second clic (deleteZero) supprime alors le zéro.
+ */
+export function canClearZeroDenominator(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
+  const loc = locateCard(state, cardId);
+  if (!loc || loc.side === "pioche" || loc.where !== "numerator") return false;
+  const frac = state[loc.side][loc.fractionIdx]!;
+  if (frac.numerator.length !== 1) return false;
+  if (!isZero(frac.numerator[0]!.atom)) return false;
+  return !!frac.denominator;
+}
+
+export function clearZeroDenominator(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "clearZeroDenominator");
+  if (!canClearZeroDenominator(state, cardId)) {
+    throw new Error("clearZeroDenominator illégale");
+  }
+  const loc = locateCard(state, cardId)!;
+  return updateSide(state, loc.side, (fs) => {
+    const frac = fs[loc.fractionIdx]!;
+    return replaceAt(fs, loc.fractionIdx, { ...frac, denominator: undefined });
+  });
+}
+
 /* ─── 2. Élimination d'un 1 multiplicatif inutile ────────────────────────── */
 
 /**

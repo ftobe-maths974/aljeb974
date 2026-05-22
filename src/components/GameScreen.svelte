@@ -89,7 +89,10 @@
     if (isZero(card.atom)) {
       fx.spawnPuffOnCard(cardId, t().fx.zeroNothing);
       try {
-        game.deleteZero(cardId);
+        // Fraction 0/d : 1er clic = retire le dénominateur (0/d → 0) ; le clic
+        // suivant supprimera le zéro.
+        if (game.canClearZeroDenominator(cardId)) game.clearZeroDenominator(cardId);
+        else game.deleteZero(cardId);
       } catch {
         /* ignoré */
       }
