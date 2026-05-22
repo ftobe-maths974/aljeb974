@@ -1,5 +1,10 @@
 <script lang="ts">
   import { i18n } from "../i18n/store.svelte.ts";
+
+  /** Code court affiché : pour une variante (rcf-kwz) → sous-tag (KWZ). */
+  function shortCode(code: string): string {
+    return (code.includes("-") ? code.split("-").pop()! : code).toUpperCase();
+  }
 </script>
 
 <div class="switcher" role="group" aria-label="Langue">
@@ -11,7 +16,7 @@
       aria-label={loc.label}
     >
       <span class="flag" aria-hidden="true">{loc.flag}</span>
-      <span class="code">{loc.code.toUpperCase()}</span>
+      <span class="code">{shortCode(loc.code)}</span>
     </button>
   {/each}
 </div>

@@ -54,7 +54,7 @@
           </div>
         </section>
         <header>
-          <h1>Aljeb974</h1>
+          <h1>Aldjabar974</h1>
           <p class="tagline">{t().ui.tagline}</p>
           <img class="logo" src="/logo.svg" alt="Aljeb974" />
         </header>

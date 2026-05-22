@@ -648,9 +648,8 @@ export function simplifyFraction(
   }
   const sLoc = locateCard(state, sourceCardId)!;
   const tLoc = locateCard(state, targetCardId)!;
-  const ids = makeIdSource(`sf${state.shots + 1}_`);
-  const next = { ...state, shots: state.shots + 1 };
-  return updateSide(next, sLoc.side, (fs) => {
+  // shots est compté par l'UI (recordShot), comme toutes les autres opérations.
+  return updateSide(state, sLoc.side, (fs) => {
     const frac = fs[sLoc.fractionIdx]!;
     const numIdx = sLoc.where === "numerator" ? sLoc.cardIdx : tLoc.cardIdx;
     const denIdx = sLoc.where === "denominator" ? sLoc.cardIdx : tLoc.cardIdx;

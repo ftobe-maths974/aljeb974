@@ -14,10 +14,16 @@
 
 import { fr } from "./locales/fr.ts";
 import { en } from "./locales/en.ts";
+import { rcf } from "./locales/rcf.ts";
+import { kwz } from "./locales/kwz.ts";
+import { kreol77 } from "./locales/kreol77.ts";
 import type { Messages } from "./types.ts";
 
 export const LOCALES: Record<string, Messages> = {
   fr,
+  rcf,
+  "rcf-kwz": kwz,
+  "rcf-77": kreol77,
   en,
 };
 
@@ -27,6 +33,13 @@ const STORAGE_KEY = "aljeb974:locale";
 
 function detectInitialLocale(): LocaleCode {
   if (typeof window !== "undefined") {
+    // Priorité au paramètre d'URL (?lang=rcf), pour les liens directs.
+    // Accepte aussi le code court FR/EN (ex: ?lang=fr) et l'ancre #lang=rcf.
+    const fromUrl =
+      new URLSearchParams(window.location.search).get("lang") ??
+      new URLSearchParams(window.location.hash.replace(/^#/, "")).get("lang");
+    if (fromUrl && fromUrl in LOCALES) return fromUrl as LocaleCode;
+
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && stored in LOCALES) return stored as LocaleCode;
     const browser = navigator.language.slice(0, 2);

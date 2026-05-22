@@ -312,6 +312,31 @@
   .card.sprite-image.x {
     animation: none;
   }
+  /* Mode emoji : l'opposé agit sur l'EMOJI (filtre / retournement), pas sur le
+     fond. On garde donc un fond clair côté négatif pour que l'emoji reste
+     visible (sinon un emoji inversé sur fond sombre disparaît). */
+  /* Fond blanc uniforme (positif comme négatif) : l'opposé se lit sur l'emoji
+     (filtre / retournement), pas sur le fond. L'inconnue x garde son dégradé. */
+  .card.sprite-emoji:not(.x) {
+    background: #ffffff;
+  }
+  .card.sprite-emoji.neg.x {
+    background: linear-gradient(135deg, #f59e0b, #fb923c);
+  }
+  .card.sprite-emoji.neg::after {
+    box-shadow: none;
+  }
+  /* Chiffres (dés) : opposition portée par le FOND — positif sur blanc,
+     opposé sur fond noir (négatif photo), l'emoji reste blanc (pas de filtre). */
+  .card.sprite-emoji.neg.literal {
+    background: #0f1722;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  /* L'emoji dé a une face transparente : on l'inverse pour que contour + points
+     passent en blanc sur le fond noir (vrai négatif photo). */
+  .card.sprite-emoji.neg.literal .value.emoji {
+    filter: invert(1);
+  }
 
   /* Highlight quand la carte est cible d'un drag-carte (simplification) */
   .card.card-hovered {
