@@ -184,8 +184,10 @@ export function capabilitiesFor(chapter: number, level: number): Capabilities {
     crossPower:       at(3, 1),
     dropnumPower:     at(3, 7),
     addPower:         at(4, 1),
-    addFractionPower: at(4, 1),
-    addTermsPower:    at(4, 1),
+    // Pouvoirs expérimentaux : désactivés en progression normale (pour ne pas
+    // casser les niveaux legacy) ; disponibles seulement dans le bac à sable.
+    addFractionPower: false,
+    addTermsPower:    false,
     primeFactorPower: at(4, 4),
     multPower:        at(4, 8),
     negPower:         at(5, 1),
