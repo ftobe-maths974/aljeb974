@@ -52,6 +52,8 @@ import {
   type RevealItem,
 } from "../lib/engine/index.ts";
 import levelsData from "../../migration/levels.json";
+import { bonusChapter, isSandbox } from "../data/bonus.ts";
+import { sandbox } from "./sandbox.svelte.ts";
 import { astuce } from "./astuce.svelte.ts";
 import { fx } from "./fx.svelte.ts";
 import { t } from "../i18n/store.svelte.ts";
@@ -59,7 +61,11 @@ import { t } from "../i18n/store.svelte.ts";
 // ─── Lookup helper ──────────────────────────────────────────────────────────
 
 function findLevel(chapter: number, level: number) {
-  const chap = levelsData.chapters.find((c) => c.index === chapter);
+  // Chapitre bonus (sandbox) défini en code, hors levels.json.
+  const chap =
+    chapter === bonusChapter.index
+      ? bonusChapter
+      : levelsData.chapters.find((c) => c.index === chapter);
   if (!chap) throw new Error(`Chapitre ${chapter} introuvable`);
   const lvl = (chap.levels as Record<string, unknown>)[level.toString()];
   if (!lvl) throw new Error(`Niveau ${chapter}-${level} introuvable`);
@@ -81,7 +87,11 @@ class GameStore {
    */
   loadCounter = $state(0);
 
-  caps = $derived<Capabilities>(capabilitiesFor(this.chapter, this.level));
+  caps = $derived<Capabilities>(
+    isSandbox(this.chapter, this.level)
+      ? sandbox.powers
+      : capabilitiesFor(this.chapter, this.level),
+  );
   /**
    * Ensemble des symboles « révélés » (affichés en texte) au niveau courant,
    * opposés inclus. Pilote l'affichage texte vs sprite des cartes

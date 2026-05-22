@@ -15,7 +15,9 @@
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
   import FullscreenButton from "./FullscreenButton.svelte";
+  import SandboxControls from "./SandboxControls.svelte";
   import { CardDisplaySettings } from "../features/card-form";
+  import { isSandbox } from "../data/bonus.ts";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -61,8 +63,10 @@
     lastClickTime = now;
     lastClickCardId = cardId;
     const loc = locateCard(game.state, cardId);
-    // La pioche ne compte pas de coups (prendre l'opposé, etc.).
-    if (loc?.side !== "pioche") game.recordShot();
+    // Chaque clic compte comme un coup (y compris « prendre l'opposé » sur la
+    // pioche). Seul l'AJOUT d'un élément à la balance depuis la pioche est gratuit
+    // (cf. handleDrop).
+    game.recordShot();
     // En block mode, tout clic ailleurs que sur la pioche-cible = alerte.
     if (game.state.pending) {
       if (loc && loc.side !== "pioche") {
@@ -121,6 +125,10 @@
         <CardDisplaySettings />
       </div>
     </header>
+
+    {#if isSandbox(game.chapter, game.level)}
+      <SandboxControls />
+    {/if}
 
     <main class="play-area">
       <div class="balance-group">

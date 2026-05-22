@@ -7,10 +7,18 @@
   import { game } from "./state/game.svelte.ts";
   import { astuce } from "./state/astuce.svelte.ts";
   import { KEY_LEVEL_IDS, getKeyLevel } from "./data/key-levels.ts";
+  import { bonusChapter } from "./data/bonus.ts";
   import { t } from "./i18n/store.svelte.ts";
 
   type Screen = "home" | "menu" | "play";
   let screen = $state<Screen>("home");
+
+  // Chapitres du jeu + chapitre bonus (sandbox) défini en code.
+  const allChapters = [...levelsData.chapters, bonusChapter] as {
+    index: number;
+    title?: string;
+    levels: Record<string, unknown>;
+  }[];
 
   const totalChapters = levelsData.chapters.length;
   const totalLevels = levelsData.chapters.reduce(
@@ -78,7 +86,7 @@
         </div>
       </header>
       <div class="chapters">
-        {#each levelsData.chapters as chapter (chapter.index)}
+        {#each allChapters as chapter (chapter.index)}
           {@const count = Object.keys(chapter.levels).length}
           <section class="chapter" style="--chapter-hue: {(chapter.index - 1) * 55};">
             <header class="chapter-head">
