@@ -61,34 +61,55 @@
       (game.state?.rhs.length ?? 0) > 0,
   );
 
-  // Scale auto pour faire tenir le contenu sur une seule ligne (pas de wrap).
-  import { onMount } from "svelte";
+  // Scale auto pour tenir sur une seule ligne (pas de wrap).
+  // lhs/rhs partagent le MÊME scale (le plus petit des deux) → toutes les cartes
+  // de l'équation ont la même taille, sur la largeur totale. La pioche garde le
+  // sien.
+  import { onMount, onDestroy } from "svelte";
+  import { balanceScale } from "../state/balanceScale.svelte.ts";
   let contentEl: HTMLDivElement | undefined = $state();
-  let scale = $state(1);
-  function recomputeScale() {
+  let needed = $state(1); // scale nécessaire pour CE côté
+  function measure() {
     if (!contentEl) return;
     const parent = contentEl.parentElement;
     if (!parent) return;
-    // Largeur disponible = side width moins padding horizontal (2 × 0.75rem).
+    // Largeur disponible = largeur du side moins padding horizontal (2 × 0.75rem).
     const avail = parent.clientWidth - parseFloat(getComputedStyle(parent).paddingLeft) * 2;
-    // Largeur naturelle du contenu (sans scale appliqué) :
-    contentEl.style.transform = "scale(1)";
+    // scrollWidth = largeur naturelle (transform:scale n'affecte pas le layout).
     const natural = contentEl.scrollWidth;
-    scale = natural > avail && natural > 0 ? Math.max(0.4, avail / natural) : 1;
-    contentEl.style.transform = `scale(${scale})`;
+    needed = natural > avail && natural > 0 ? Math.max(0.3, avail / natural) : 1;
   }
+  // Échelle appliquée : pioche = la sienne ; lhs/rhs = la plus petite des deux.
+  const appliedScale = $derived(
+    name === "pioche" ? needed : Math.min(balanceScale.lhs, balanceScale.rhs),
+  );
+  // Publie le scale nécessaire de ce côté dans le store partagé.
+  $effect(() => {
+    if (name === "lhs") balanceScale.lhs = needed;
+    else if (name === "rhs") balanceScale.rhs = needed;
+  });
+  onDestroy(() => {
+    // Côté démonté (niveau sans équation) → ne doit plus contraindre le min.
+    if (name === "lhs") balanceScale.lhs = 1;
+    else if (name === "rhs") balanceScale.rhs = 1;
+  });
+  // Applique le scale (réactif : se met à jour si l'AUTRE côté change le min).
+  $effect(() => {
+    if (contentEl) contentEl.style.transform = `scale(${appliedScale})`;
+  });
+  // Re-mesure quand l'état change.
   $effect(() => {
     void game.state;
-    requestAnimationFrame(recomputeScale);
+    requestAnimationFrame(measure);
   });
   onMount(() => {
-    recomputeScale();
-    const ro = new ResizeObserver(recomputeScale);
+    measure();
+    const ro = new ResizeObserver(measure);
     if (contentEl?.parentElement) ro.observe(contentEl.parentElement);
-    window.addEventListener("resize", recomputeScale);
+    window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", recomputeScale);
+      window.removeEventListener("resize", measure);
     };
   });
 </script>
@@ -155,6 +176,9 @@
   }
   .lhs, .rhs {
     flex: 1;
+    /* Autorise le côté à rétrécir sous la largeur de son contenu (nowrap),
+       sinon il déborde au lieu de laisser le scale auto (recomputeScale) agir. */
+    min-width: 0;
   }
   .pioche {
     background: rgba(0, 0, 0, 0.3);
