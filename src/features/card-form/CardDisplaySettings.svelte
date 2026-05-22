@@ -7,6 +7,17 @@
 
   let open = $state(false);
   const lang = $derived(i18n.locale === "en" ? "en" : "fr");
+
+  /** Téléporte l'overlay sur <body> pour échapper aux contextes d'empilement /
+   *  blocs englobants (topbar backdrop-filter…) → vraie modale plein écran. */
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return {
+      destroy() {
+        node.parentNode?.removeChild(node);
+      },
+    };
+  }
   /** L'axe « opposés » ne change rien en mode image (l'asset encode le signe). */
   const oppositeApplies = $derived(cardForm.value !== "image");
 
@@ -30,6 +41,7 @@
   </button>
 
   {#if open}
+    <div class="overlay" use:portal>
     <button
       class="backdrop"
       aria-label={lang === "en" ? "Close" : "Fermer"}
@@ -95,6 +107,7 @@
         {/each}
       </ul>
     </div>
+    </div>
   {/if}
 </div>
 
@@ -125,29 +138,36 @@
     transform: scale(1.05);
   }
 
-  .backdrop {
+  /* Overlay plein écran (téléporté sur body) : modale centrée, navigable même
+     en paysage mobile. */
+  .overlay {
     position: fixed;
     inset: 0;
-    z-index: 40;
-    background: transparent;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
     border: 0;
     cursor: default;
   }
   .panel {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    z-index: 41;
-    width: min(21rem, 84vw);
-    max-height: 80vh;
-    overflow: auto;
-    padding: 0.75rem;
+    position: relative;
+    z-index: 1;
+    width: min(22rem, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.85rem;
     border-radius: 0.85rem;
-    background: rgba(20, 28, 40, 0.97);
+    background: rgba(20, 28, 40, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
   }
   h3 {
     margin: 0.2rem 0 0.55rem;
