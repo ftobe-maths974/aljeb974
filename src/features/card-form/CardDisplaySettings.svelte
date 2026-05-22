@@ -47,7 +47,7 @@
           >
             <span class="form-demo" aria-hidden="true">
               {#if f.id === "image"}
-                <span class="demo-card" style="background-image: url(/cartes/x.png)"></span>
+                <span class="demo-card" style="background-image: url({import.meta.env.BASE_URL}cartes/x.png)"></span>
               {:else if f.id === "emoji"}
                 <span class="demo-card emojicard">{emojiFor("x")}</span>
               {:else}

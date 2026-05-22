@@ -56,7 +56,7 @@
         <header>
           <h1>Aldjabar974</h1>
           <p class="tagline">{t().ui.tagline}</p>
-          <img class="logo" src="/logo.svg" alt="Aljeb974" />
+          <img class="logo" src="{import.meta.env.BASE_URL}logo.svg" alt="Aldjabar974" />
         </header>
       </div>
       <footer>

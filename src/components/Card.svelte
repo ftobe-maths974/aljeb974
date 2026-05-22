@@ -65,7 +65,9 @@
   const absValue = $derived(dataValue.replace(/^-/, ""));
   /** Un PNG legacy existe pour les lettres a–z et chiffres 0–9 (signe inclus). */
   const spriteUrl = $derived(
-    /^-?([a-z]|[0-9])$/.test(dataValue) ? `/cartes/${dataValue}.png` : null,
+    /^-?([a-z]|[0-9])$/.test(dataValue)
+      ? `${import.meta.env.BASE_URL}cartes/${dataValue}.png`
+      : null,
   );
   const emojiGlyph = $derived(emojiFor(absValue));
   const revealedAsText = $derived(
