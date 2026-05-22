@@ -103,22 +103,26 @@
     position: relative;
     display: inline-block;
   }
+  /* Même gabarit que le bouton « refaire » de la topbar et le plein écran :
+     carré arrondi ~2.1rem. */
   .trigger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 999px;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.6rem;
     color: var(--fg);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 1rem;
     opacity: 0.7;
-    transition: opacity 120ms, background 120ms;
+    transition: opacity 120ms, background 120ms, transform 120ms;
   }
   .trigger:hover {
     opacity: 1;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.16);
+    transform: scale(1.05);
   }
 
   .backdrop {
