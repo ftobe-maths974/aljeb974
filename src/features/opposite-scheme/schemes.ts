@@ -94,7 +94,7 @@ export const OPPOSITE_SCHEMES: OppositeScheme[] = [
   },
 ];
 
-export const DEFAULT_SCHEME_ID = "negatif-photo";
+export const DEFAULT_SCHEME_ID = "solid-ghost";
 
 /** Toutes les variables connues — sert au store pour nettoyer avant d'appliquer. */
 export const ALL_VAR_KEYS: string[] = [
