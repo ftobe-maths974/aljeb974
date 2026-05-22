@@ -180,7 +180,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.5rem 0.75rem;
+    /* padding-left élargi pour laisser place au bouton plein écran (coin haut-gauche). */
+    padding: 0.5rem 0.75rem 0.5rem 2.9rem;
     border-radius: 0.85rem;
     border: 1px solid hsla(var(--hue), 60%, 70%, 0.18);
     background:

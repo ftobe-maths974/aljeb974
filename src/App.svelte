@@ -3,6 +3,7 @@
   import OrientationGate from "./lib/OrientationGate.svelte";
   import GameScreen from "./components/GameScreen.svelte";
   import LocaleSwitcher from "./components/LocaleSwitcher.svelte";
+  import FullscreenButton from "./components/FullscreenButton.svelte";
   import { CardDisplaySettings } from "./features/card-form";
   import { game } from "./state/game.svelte.ts";
   import { astuce } from "./state/astuce.svelte.ts";
@@ -36,6 +37,7 @@
 </script>
 
 <OrientationGate>
+  <FullscreenButton />
   {#if screen === "home"}
     <main class="placeholder">
       <div class="lang-corner">
@@ -236,7 +238,8 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.25rem 0 1rem;
+    /* padding-left pour ne pas passer sous le bouton plein écran (coin haut-gauche). */
+    padding: 0.25rem 0 1rem 2.6rem;
     position: sticky;
     top: 0;
     z-index: 5;
