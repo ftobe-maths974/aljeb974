@@ -66,10 +66,6 @@
 
 <style>
   .fs-btn {
-    position: fixed;
-    top: 0.6rem;
-    left: 0.6rem;
-    z-index: 1000;
     width: 2.1rem;
     height: 2.1rem;
     display: inline-flex;

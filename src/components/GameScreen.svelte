@@ -14,6 +14,8 @@
   import MultiplyZone from "./MultiplyZone.svelte";
   import { fx } from "../state/fx.svelte.ts";
   import { t } from "../i18n/store.svelte.ts";
+  import FullscreenButton from "./FullscreenButton.svelte";
+  import { CardDisplaySettings } from "../features/card-form";
 
   let { onBack }: { onBack?: () => void } = $props();
 
@@ -103,14 +105,20 @@
 {#if game.state}
   <div class="screen" style="--chapter-hue: {(game.chapter - 1) * 55};">
     <header class="topbar">
-      <button class="back" onclick={onBack} aria-label={t().ui.backMenu}>{t().ui.backMenu}</button>
+      <div class="actions">
+        <FullscreenButton />
+        <button class="back" onclick={onBack} aria-label={t().ui.backMenu}>{t().ui.backMenu}</button>
+      </div>
       <div class="info">
         <span class="chapter-badge" aria-hidden="true">{game.chapter}</span>
         <span class="level-label">{t().ui.levelHeader(game.chapter, game.level)}</span>
         <span class="dot" aria-hidden="true">·</span>
         <span class="shots">{t().ui.coupsRecap(game.state.shots, game.state.shotsTarget)}</span>
       </div>
-      <button class="restart" onclick={() => game.restart()} aria-label={t().ui.restart}>{t().ui.restart}</button>
+      <div class="actions">
+        <button class="restart" onclick={() => game.restart()} aria-label={t().ui.restart}>{t().ui.restart}</button>
+        <CardDisplaySettings />
+      </div>
     </header>
 
     <main class="play-area">
@@ -180,8 +188,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    /* padding latéral élargi : bouton plein écran à gauche, paramètres à droite. */
-    padding: 0.5rem 2.9rem 0.5rem 2.9rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 0.85rem;
     border: 1px solid hsla(var(--hue), 60%, 70%, 0.18);
     background:
@@ -195,6 +202,11 @@
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.05) inset,
       0 6px 18px rgba(0, 0, 0, 0.25);
+  }
+  .actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .topbar button {
     background: rgba(255, 255, 255, 0.08);
