@@ -6,11 +6,12 @@
  *   2. Le store cherche l'astuce dans la table, résout les rects DOM
  *      (avec un léger retard pour laisser Svelte rendre les éléments).
  *   3. Une boucle 3s relance l'animation (cf. legacy).
- *   4. Au premier pointerdown global, le store se désactive.
+ *   4. La main reste affichée jusqu'à ce que le joueur AGISSE : démarrage d'un
+ *      drag (cf. drag.svelte.ts) ou coup réussi (cf. game.applyState). Un simple
+ *      tap (énoncé, vide, UI) ne l'éteint pas.
  */
 
 import { ASTUCES, type Astuce, type AstuceTarget, type AtomQuery, astuceSelector } from "../data/astuces.ts";
-import { onFirstInteraction } from "./firstInteraction.ts";
 
 export interface AstuceResolved {
   config: Astuce;
@@ -25,7 +26,6 @@ export interface AstuceResolved {
 class AstuceStore {
   state = $state<AstuceResolved | null>(null);
   private timer: ReturnType<typeof setInterval> | null = null;
-  private unbindFirstInteraction: (() => void) | null = null;
 
   startForLevel(levelId: string) {
     this.stop();
@@ -55,10 +55,8 @@ class AstuceStore {
     this.timer = setInterval(() => {
       if (this.state) this.state = { ...this.state, tick: this.state.tick + 1 };
     }, 3000);
-
-    // S'arrête à la première interaction (souris/touch) du joueur.
-    // Capture phase pour shunter les stopPropagation des drags enfants.
-    this.unbindFirstInteraction = onFirstInteraction(() => this.stop());
+    // L'arrêt est déclenché par une vraie action (drag start / coup réussi),
+    // pas par un simple tap (cf. drag.svelte.ts et game.applyState).
   }
 
   private findElement(q: AtomQuery): HTMLElement | null {
@@ -77,8 +75,6 @@ class AstuceStore {
       clearInterval(this.timer);
       this.timer = null;
     }
-    this.unbindFirstInteraction?.();
-    this.unbindFirstInteraction = null;
     this.state = null;
   }
 }

@@ -19,6 +19,8 @@
  *   pointerup / pointercancel → fin, pick de la cible via elementFromPoint
  */
 
+import { astuce } from "./astuce.svelte.ts";
+
 export interface FractionDragState {
   kind: "fraction";
   fractionId: string;
@@ -235,6 +237,8 @@ function beginDrag(
     if (!started) {
       if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 6) return;
       started = true;
+      // Démarrer un drag (carte ou terme) éteint la main d'astuce.
+      astuce.stop();
       try { node.setPointerCapture(ev.pointerId); } catch {}
       const initial = buildState();
       drag.state = {

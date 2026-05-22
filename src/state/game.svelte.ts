@@ -148,6 +148,9 @@ class GameStore {
   private applyState(newState: GameState) {
     const wasSolved = this.state ? isSolved(this.state) : false;
     this.state = newState;
+    // Un coup réussi éteint la main d'astuce (couvre les astuces de type tap ;
+    // les drags l'éteignent dès leur démarrage, cf. drag.svelte.ts).
+    astuce.stop();
     if (!wasSolved && isSolved(newState)) {
       if (this.victoryTimer) clearTimeout(this.victoryTimer);
       this.victoryReady = false;
