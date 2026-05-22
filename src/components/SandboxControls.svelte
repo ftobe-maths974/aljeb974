@@ -11,13 +11,14 @@
   import { game } from "../state/game.svelte.ts";
   import { sandboxPioche } from "../data/bonus.ts";
   import { parseEquation, ParseError } from "../lib/parseEquation.ts";
+  import { genLinearInt, genLinearFrac, type GeneratedEquation } from "../lib/genEquation.ts";
   import { SYMBOL_LETTERS, serializeAtom, type Atom, type CardInstance } from "../lib/engine/index.ts";
   import Card from "./Card.svelte";
 
   let panel = $state<null | "powers" | "palette">(null);
   const lang = $derived(i18n.locale === "en" ? "en" : "fr");
 
-  let equation = $state("x + 6 + a = b - 3 + 2/p");
+  let equation = $state("7x + 6 = -2x - 5");
   let error = $state<string | null>(null);
 
   function loadEquation() {
@@ -29,6 +30,13 @@
     } catch (e) {
       error = e instanceof ParseError ? e.message : "Équation invalide.";
     }
+  }
+
+  /** Charge une équation générée et met à jour le prompt (affichage). */
+  function loadGenerated(g: GeneratedEquation) {
+    error = null;
+    equation = g.display;
+    game.loadSandbox({ lhs: g.lhs, rhs: g.rhs, pioche: sandboxPioche, shots: 999 });
   }
 
   // Palette : nombres 0–9 + inconnue x + lettres autorisées.
@@ -67,6 +75,11 @@
           onkeydown={(e) => e.key === "Enter" && loadEquation()}
         />
         <button class="load" onclick={loadEquation}>{lang === "en" ? "Load" : "Charger"}</button>
+      </div>
+      <div class="gen">
+        <span class="gen-lbl">{lang === "en" ? "Generate:" : "Générer :"}</span>
+        <button class="gen-btn" onclick={() => loadGenerated(genLinearInt())}>ax+b=cx+d</button>
+        <button class="gen-btn" onclick={() => loadGenerated(genLinearFrac())}>(a/b)x+c/d=…</button>
       </div>
       {#if error}<p class="err">{error}</p>{/if}
       <div class="sep"></div>
@@ -169,6 +182,18 @@
     flex-shrink: 0; background: var(--accent); color: var(--bg);
     border-radius: 0.4rem; padding: 0.4rem 0.6rem; font-size: 0.78rem; font-weight: 700;
   }
+  .gen { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin-top: 0.4rem; }
+  .gen-lbl { font-size: 0.72rem; opacity: 0.6; }
+  .gen-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--fg);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.4rem;
+    padding: 0.25rem 0.45rem;
+    font-size: 0.72rem;
+    font-family: ui-monospace, monospace;
+  }
+  .gen-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: var(--accent); }
   .err { margin: 0.35rem 0 0; color: #fca5a5; font-size: 0.74rem; line-height: 1.3; }
   .sep { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 0.55rem 0; }
 
