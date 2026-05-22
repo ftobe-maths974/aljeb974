@@ -24,6 +24,7 @@
 <style>
   .switcher {
     display: inline-flex;
+    flex-wrap: wrap;
     gap: 0.25rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 999px;

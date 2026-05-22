@@ -4,6 +4,7 @@
   import { OPPOSITE_SCHEMES, schemeStyle, type OppositeScheme } from "../opposite-scheme/schemes.ts";
   import { cardForm, CARD_FORMS, type CardForm } from "./store.svelte.ts";
   import { emojiFor } from "./emoji.ts";
+  import LocaleSwitcher from "../../components/LocaleSwitcher.svelte";
 
   let open = $state(false);
   const lang = $derived(i18n.locale === "en" ? "en" : "fr");
@@ -48,6 +49,12 @@
       onclick={() => (open = false)}
     ></button>
     <div class="panel" role="dialog" aria-label={lang === "en" ? "Card display" : "Affichage des cartes"}>
+      <!-- ─── Langue ───────────────────────────────────────────────────────── -->
+      <h3>{lang === "en" ? "Language" : "Langue"}</h3>
+      <div class="lang-row">
+        <LocaleSwitcher />
+      </div>
+
       <!-- ─── Axe B : forme des cartes ─────────────────────────────────────── -->
       <h3>{lang === "en" ? "Card form" : "Forme des cartes"}</h3>
       <div class="forms" role="group">
@@ -152,7 +159,9 @@
   .backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(8, 12, 20, 0.82);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     border: 0;
     cursor: default;
   }
@@ -191,6 +200,9 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
     opacity: 0.8;
+  }
+  .lang-row {
+    margin-bottom: 0.9rem;
   }
   .hint {
     margin: 0.4rem 0 0.9rem;

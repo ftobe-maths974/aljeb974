@@ -2,7 +2,6 @@
   import levelsData from "../migration/levels.json";
   import OrientationGate from "./lib/OrientationGate.svelte";
   import GameScreen from "./components/GameScreen.svelte";
-  import LocaleSwitcher from "./components/LocaleSwitcher.svelte";
   import FullscreenButton from "./components/FullscreenButton.svelte";
   import { CardDisplaySettings } from "./features/card-form";
   import { game } from "./state/game.svelte.ts";
@@ -43,7 +42,6 @@
         <FullscreenButton />
       </div>
       <div class="lang-corner">
-        <LocaleSwitcher />
         <CardDisplaySettings />
       </div>
       <div class="center-group">
@@ -76,7 +74,6 @@
         <button class="back" onclick={() => (screen = "home")}>{t().ui.backHome}</button>
         <h2>{t().ui.chooseLevelTitle}</h2>
         <div class="lang-corner-menu">
-          <LocaleSwitcher />
           <CardDisplaySettings />
         </div>
       </header>
