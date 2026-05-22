@@ -34,11 +34,13 @@ import {
   canMultiplyInFraction,
   canClearOneDenominator,
   canClearZeroDenominator,
+  canReduceNumeratorSum,
   canReverseInPioche,
   canSimplifyFraction,
   capabilitiesFor,
   clearOneDenominator,
   clearZeroDenominator,
+  reduceNumeratorSum,
   completePiocheDrop,
   factorize,
   divideAll,
@@ -293,6 +295,20 @@ class GameStore {
   /** Le clic sur ce « 1 » est-il un dénominateur 1 à retirer ? */
   canClearOneDenominator(cardId: string): boolean {
     return this.state ? canClearOneDenominator(this.state, cardId) : false;
+  }
+
+  /** Numérateur-somme : réduit la somme (3+2 → 5) au clic. */
+  reduceNumeratorSum(cardId: string) {
+    if (!this.state) return;
+    if (this.state.pending) {
+      this.flashAlert();
+      return;
+    }
+    this.applyState(reduceNumeratorSum(this.state, cardId));
+  }
+
+  canReduceNumeratorSum(cardId: string): boolean {
+    return this.state ? canReduceNumeratorSum(this.state, cardId) : false;
   }
 
   deleteOne(cardId: string) {

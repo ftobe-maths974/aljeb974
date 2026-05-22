@@ -86,6 +86,12 @@
       game.reverseInPioche(cardId);
       return;
     }
+    // Numérateur-somme (fusion de fractions) : un clic réduit la somme (3+2 → 5).
+    if (game.canReduceNumeratorSum(cardId)) {
+      fx.spawnPuffOnCard(cardId, t().fx.addLiterals);
+      game.reduceNumeratorSum(cardId);
+      return;
+    }
     if (isZero(card.atom)) {
       try {
         // Fraction 0/d : 1er clic = retire le dénominateur (0/d → 0) ; le clic

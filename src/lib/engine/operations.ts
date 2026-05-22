@@ -418,7 +418,10 @@ export function cancelPending(state: GameState): GameState {
 export function canMoveAcross(state: GameState, fractionId: EntityId): boolean {
   if (state.pending) return false;
   const loc = locateFraction(state, fractionId);
-  return loc !== null && (loc.side === "lhs" || loc.side === "rhs");
+  if (!loc || (loc.side !== "lhs" && loc.side !== "rhs")) return false;
+  // Une fraction-somme non réduite doit d'abord être réduite.
+  if (state[loc.side][loc.fractionIdx]!.numeratorIsSum) return false;
+  return true;
 }
 
 export function moveAcross(state: GameState, fractionId: EntityId): GameState {
@@ -583,7 +586,11 @@ export function canMultiplyAllNum(
 ): boolean {
   if (state.pending) return false;
   const loc = locateFraction(state, piocheFractionId);
-  return loc !== null && loc.side === "pioche";
+  if (!loc || loc.side !== "pioche") return false;
+  // Pas de multiplication tant qu'une fraction-somme n'est pas réduite
+  // (multiplier ajouterait un facteur au numérateur, ce qui fausserait la somme).
+  const hasSum = [...state.lhs, ...state.rhs].some((f) => f.numeratorIsSum);
+  return !hasSum;
 }
 
 export function multiplyAllNum(
@@ -742,6 +749,8 @@ export function canMultiplyInFraction(
   if (sLoc.side !== tLoc.side || sLoc.fractionIdx !== tLoc.fractionIdx) return false;
   if (sLoc.where !== tLoc.where) return false; // doivent être dans la MÊME région
   const frac = state[sLoc.side][sLoc.fractionIdx]!;
+  // Numérateur-somme : les cartes s'additionnent (clic), pas se multiplient.
+  if (frac.numeratorIsSum) return false;
   const list = sLoc.where === "numerator" ? frac.numerator : frac.denominator!;
   const sCard = list[sLoc.cardIdx]!;
   const tCard = list[tLoc.cardIdx]!;
@@ -996,10 +1005,17 @@ export function addFractions(
   const tl = locateFraction(state, targetFractionId)!;
   const dFrac = state[dl.side][dl.fractionIdx]!;
   const tFrac = state[tl.side][tl.fractionIdx]!;
-  const sum = literalValue(dFrac.numerator[0]!.atom) + literalValue(tFrac.numerator[0]!.atom);
+  // On NE calcule PAS : on CONCATÈNE les numérateurs en somme non réduite
+  // (cible + dragué), sur le dénominateur commun. L'élève réduira au clic.
+  const ids = makeIdSource(`af${state.shots + 1}_`);
   const newTarget: FractionInstance = {
-    ...tFrac, // conserve le dénominateur
-    numerator: [{ id: tFrac.numerator[0]!.id, atom: fromLiteral(sum) }],
+    id: tFrac.id,
+    numerator: [
+      { id: ids.next(), atom: dFrac.numerator[0]!.atom }, // dragué
+      { id: tFrac.numerator[0]!.id, atom: tFrac.numerator[0]!.atom }, // cible
+    ],
+    denominator: tFrac.denominator,
+    numeratorIsSum: true,
   };
   const next = { ...state };
   return updateSide(next, dl.side, (fs) => {
@@ -1007,6 +1023,33 @@ export function addFractions(
     const newTargetIdx = dl.fractionIdx < tl.fractionIdx ? tl.fractionIdx - 1 : tl.fractionIdx;
     return replaceAt(removed, newTargetIdx, newTarget);
   });
+}
+
+/* ─── 9.7. Réduction d'un numérateur-somme (clic : 3+2 → 5) ─────────────────── */
+
+export function canReduceNumeratorSum(state: GameState, cardId: EntityId): boolean {
+  if (state.pending) return false;
+  const loc = locateCard(state, cardId);
+  if (!loc || loc.side === "pioche" || loc.where !== "numerator") return false;
+  const frac = state[loc.side][loc.fractionIdx]!;
+  return !!frac.numeratorIsSum && frac.numerator.length >= 2;
+}
+
+export function reduceNumeratorSum(state: GameState, cardId: EntityId): GameState {
+  ensureNotPending(state, "reduceNumeratorSum");
+  if (!canReduceNumeratorSum(state, cardId)) {
+    throw new Error("reduceNumeratorSum illégale");
+  }
+  const loc = locateCard(state, cardId)!;
+  const frac = state[loc.side][loc.fractionIdx]!;
+  const sum = frac.numerator.reduce((acc, c) => acc + literalValue(c.atom), 0);
+  const ids = makeIdSource(`rn${state.shots + 1}_`);
+  const reduced: FractionInstance = {
+    id: frac.id,
+    numerator: [{ id: ids.next(), atom: fromLiteral(sum) }],
+    denominator: frac.denominator,
+  };
+  return updateSide(state, loc.side, (fs) => replaceAt(fs, loc.fractionIdx, reduced));
 }
 
 /* ─── 9.6. Addition de termes semblables sans dénominateur (addTermsPower) ──── */
@@ -1019,7 +1062,7 @@ export function addFractions(
 function splitTerm(
   frac: FractionInstance,
 ): { coef: number; key: string; symbolic: Atom[] } | null {
-  if (frac.denominator) return null;
+  if (frac.denominator || frac.numeratorIsSum) return null;
   let coef = 1;
   const symbolic: Atom[] = [];
   for (const c of frac.numerator) {

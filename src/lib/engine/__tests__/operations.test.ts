@@ -6,8 +6,10 @@ import {
   canAddTerms,
   canClearOneDenominator,
   canClearZeroDenominator,
+  canReduceNumeratorSum,
   clearOneDenominator,
   clearZeroDenominator,
+  reduceNumeratorSum,
   cancelOpposites,
   cancelPending,
   canCancelOpposites,
@@ -199,7 +201,7 @@ describe("moveAcross", () => {
 });
 
 describe("addFractions", () => {
-  it("additionne deux fractions de même dénominateur (3/p + 2/p = 5/p)", () => {
+  it("fusionne en somme NON calculée (3/p + 2/p → (3+2)/p)", () => {
     const s = initialState(lvl({ lhs: ["3/p", "2/p", "x"], shots: 9 }), "test");
     const dragged = s.lhs[0]!.id;
     const target = s.lhs[1]!.id;
@@ -207,10 +209,21 @@ describe("addFractions", () => {
     const s2 = addFractions(s, dragged, target);
     expect(s2.lhs.length).toBe(2); // une fraction de moins
     const sum = s2.lhs[0]!;
-    expect(sum.numerator).toHaveLength(1);
-    expect(sum.numerator[0]!.atom.kind).toBe("literal");
-    expect((sum.numerator[0]!.atom as { value: number }).value).toBe(5);
+    expect(sum.numeratorIsSum).toBe(true);
+    expect(sum.numerator).toHaveLength(2); // 3 et 2 concaténés, non calculés
+    expect((sum.numerator[0]!.atom as { value: number }).value).toBe(3);
+    expect((sum.numerator[1]!.atom as { value: number }).value).toBe(2);
     expect(sum.denominator?.[0]!.atom.kind).toBe("symbol");
+
+    // Réduction au clic : (3+2)/p → 5/p
+    const reduceId = sum.numerator[0]!.id;
+    expect(canReduceNumeratorSum(s2, reduceId)).toBe(true);
+    const s3 = reduceNumeratorSum(s2, reduceId);
+    const red = s3.lhs[0]!;
+    expect(red.numeratorIsSum).toBeFalsy();
+    expect(red.numerator).toHaveLength(1);
+    expect((red.numerator[0]!.atom as { value: number }).value).toBe(5);
+    expect(red.denominator?.[0]!.atom.kind).toBe("symbol");
   });
 
   it("refuse si les dénominateurs diffèrent", () => {

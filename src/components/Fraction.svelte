@@ -36,7 +36,8 @@
    * bloquerait le crossPower.
    */
   const numDraggable = $derived(
-    (game.caps.multPower || game.caps.negPower) &&
+    !fraction.numeratorIsSum &&
+      (game.caps.multPower || game.caps.negPower) &&
       fraction.numerator.length > 1,
   );
 
@@ -61,7 +62,7 @@
   <div class="row numerator" data-region="numerator">
     {#each fraction.numerator as card (card.id)}
       {#if card !== fraction.numerator[0]}
-        <span class="mult-dot" aria-hidden="true">{multSign}</span>
+        <span class="mult-dot" class:plus={fraction.numeratorIsSum} aria-hidden="true">{fraction.numeratorIsSum ? "+" : multSign}</span>
       {/if}
       <Card
         {card}
@@ -134,6 +135,11 @@
     font-size: 1.5rem;
     color: var(--fg);
     opacity: 0.7;
+  }
+  /* Somme non réduite : « + » plus marqué que le point de multiplication. */
+  .mult-dot.plus {
+    font-weight: 800;
+    opacity: 0.9;
   }
   .fraction.hovered {
     background: rgba(245, 158, 11, 0.2);

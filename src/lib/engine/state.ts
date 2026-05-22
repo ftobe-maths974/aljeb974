@@ -46,6 +46,13 @@ export interface FractionInstance {
   id: EntityId;
   numerator: CardInstance[];
   denominator?: CardInstance[];
+  /**
+   * État transitoire : le numérateur est une SOMME NON CALCULÉE (chaque carte
+   * est un addend littéral, à additionner), issue de la fusion de fractions de
+   * même dénominateur. L'élève clique pour réduire. Tant que true, la fraction
+   * n'est éligible qu'à la réduction (les autres opérations la refusent).
+   */
+  numeratorIsSum?: boolean;
 }
 
 /** Désigne un côté de l'équation. */
