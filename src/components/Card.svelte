@@ -49,9 +49,7 @@
   // de la carte (drag, reflow, transition).
   const showSpotlight = $derived(
     isX &&
-      card.atom.sign === 1 &&
       !!game.state &&
-      game.state.rhs.length > 0 &&
       !game.solved &&
       !game.victoryReady,
   );
@@ -220,18 +218,23 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
 
-  /* Inconnue : dégradé pulsant pour l'identifier en un coup d'œil */
+  /* Inconnue : dégradé + halo flamboyant qui « respire » très lentement, pour
+     l'identifier en un coup d'œil (le dragon brille). */
   .card.x {
     background: linear-gradient(135deg, #f59e0b, #fb923c);
     color: #ffffff;
-    animation: x-pulse 3s ease-in-out infinite;
+    animation: x-glow 4.5s ease-in-out infinite;
   }
-  @keyframes x-pulse {
+  @keyframes x-glow {
     0%, 100% {
-      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+      box-shadow:
+        0 0 7px 1px rgba(245, 158, 11, 0.45),
+        0 0 15px 3px rgba(251, 146, 60, 0.22);
     }
     50% {
-      box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+      box-shadow:
+        0 0 15px 4px rgba(245, 158, 11, 0.75),
+        0 0 30px 9px rgba(251, 146, 60, 0.45);
     }
   }
 

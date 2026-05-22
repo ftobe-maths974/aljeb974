@@ -10,6 +10,17 @@
   import { getKeyLevel, type KeyLevel } from "../data/key-levels.ts";
   import { t } from "../i18n/store.svelte.ts";
   import { onFirstInteraction } from "../state/firstInteraction.ts";
+  import { shouldRevealAsText } from "../lib/engine/index.ts";
+  import { cardForm } from "../features/card-form/store.svelte.ts";
+  import { emojiFor } from "../features/card-form/emoji.ts";
+
+  // Comment afficher le « x » dans l'énoncé : avatar (dragon/sprite) si non
+  // révélé en mode image/emoji, sinon « x » maths. Suit l'état du plateau.
+  const xMode = $derived.by<"text" | "emoji" | "image">(() => {
+    if (cardForm.value === "text") return "text";
+    if (shouldRevealAsText({ kind: "unknown", sign: 1 }, game.revealSet)) return "text";
+    return cardForm.value;
+  });
 
   let visible = $state(false);
   let current = $state<KeyLevel | null>(null);
@@ -54,7 +65,19 @@
     <span class="emoji" aria-hidden="true">{current.emoji}</span>
     <div class="text">
       <strong>{localized.title}</strong>
-      <span>{localized.hint}</span>
+      <span>
+        {#each localized.hint.split(/(\bx\b)/) as seg, i (i)}
+          {#if i % 2 === 1}
+            {#if xMode === "image"}
+              <img class="x-img" src="{import.meta.env.BASE_URL}cartes/x.png" alt="x" />
+            {:else if xMode === "emoji"}
+              <span class="x-emoji">{emojiFor("x")}</span>
+            {:else}
+              <span class="x-math">x</span>
+            {/if}
+          {:else}{seg}{/if}
+        {/each}
+      </span>
     </div>
     <button class="close" onclick={dismiss} aria-label="Fermer">✕</button>
   </div>
@@ -103,6 +126,21 @@
   .text span {
     font-size: 0.85rem;
     opacity: 0.92;
+  }
+  /* « x » de l'énoncé, aligné sur la représentation du plateau. */
+  .x-math {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .x-emoji {
+    font-size: 1.25em;
+    vertical-align: -0.15em;
+  }
+  .x-img {
+    height: 1.4em;
+    vertical-align: -0.35em;
   }
   .close {
     background: rgba(255, 255, 255, 0.1);
