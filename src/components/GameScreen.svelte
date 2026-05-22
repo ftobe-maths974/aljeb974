@@ -1,6 +1,6 @@
 <script lang="ts">
   import { game } from "../state/game.svelte.ts";
-  import { locateCard, isZero, isOne } from "../lib/engine/index.ts";
+  import { locateCard, locateFraction, isZero, isOne } from "../lib/engine/index.ts";
   import Side from "./Side.svelte";
   import VictoryOverlay from "./VictoryOverlay.svelte";
   import DragGhost from "./DragGhost.svelte";
@@ -23,8 +23,10 @@
     sourceFractionId: string,
     target: { fractionId?: string; side?: "lhs" | "rhs"; holeCardId?: string; divideZone?: boolean; multiplyZone?: boolean },
   ) {
-    // Chaque drag&drop compte comme un coup, succès ou échec.
-    game.recordShot();
+    // Chaque drag&drop compte comme un coup… SAUF la pioche : ajouter des
+    // éléments à la balance depuis la pioche ne coûte pas de coup.
+    const src = game.state ? locateFraction(game.state, sourceFractionId) : null;
+    if (src?.side !== "pioche") game.recordShot();
     game.tryDrop(sourceFractionId, target);
   }
 
@@ -58,17 +60,16 @@
     }
     lastClickTime = now;
     lastClickCardId = cardId;
-    // Chaque clic compte comme un coup, succès ou échec.
-    game.recordShot();
+    const loc = locateCard(game.state, cardId);
+    // La pioche ne compte pas de coups (prendre l'opposé, etc.).
+    if (loc?.side !== "pioche") game.recordShot();
     // En block mode, tout clic ailleurs que sur la pioche-cible = alerte.
     if (game.state.pending) {
-      const loc = locateCard(game.state, cardId);
       if (loc && loc.side !== "pioche") {
         game.flashAlert();
       }
       return;
     }
-    const loc = locateCard(game.state, cardId);
     if (!loc) return;
     const list =
       loc.where === "numerator"
