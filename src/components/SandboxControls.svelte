@@ -6,9 +6,26 @@
    */
   import { sandbox, SANDBOX_POWERS } from "../state/sandbox.svelte.ts";
   import { i18n } from "../i18n/store.svelte.ts";
+  import { game } from "../state/game.svelte.ts";
+  import { sandboxPioche } from "../data/bonus.ts";
+  import { parseEquation, ParseError } from "../lib/parseEquation.ts";
 
   let open = $state(true);
   const lang = $derived(i18n.locale === "en" ? "en" : "fr");
+
+  // Prompt d'équation, pré-rempli avec un exemple représentable.
+  let equation = $state("x + 6 + a = b - 3 + 2/p");
+  let error = $state<string | null>(null);
+
+  function loadEquation() {
+    error = null;
+    try {
+      const { lhs, rhs } = parseEquation(equation);
+      game.loadSandbox({ lhs, rhs, pioche: sandboxPioche, shots: 999 });
+    } catch (e) {
+      error = e instanceof ParseError ? e.message : "Équation invalide.";
+    }
+  }
 </script>
 
 <div class="sandbox" class:open>
@@ -19,6 +36,26 @@
   </button>
   {#if open}
     <div class="list">
+      <!-- Prompt d'équation -->
+      <div class="prompt">
+        <input
+          type="text"
+          bind:value={equation}
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          placeholder="a/b + 3x = 5 - x"
+          onkeydown={(e) => e.key === "Enter" && loadEquation()}
+        />
+        <button class="load" onclick={loadEquation}>
+          {lang === "en" ? "Load" : "Charger"}
+        </button>
+      </div>
+      {#if error}
+        <p class="err">{error}</p>
+      {/if}
+      <div class="sep"></div>
+
       {#each SANDBOX_POWERS as p (p.key)}
         <button
           class="pw"
@@ -75,6 +112,46 @@
     padding: 0 0.4rem 0.5rem;
     max-height: 60vh;
     overflow-y: auto;
+  }
+  .prompt {
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.1rem 0 0.3rem;
+  }
+  .prompt input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--fg);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.78rem;
+    font-family: ui-monospace, monospace;
+  }
+  .prompt input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .prompt .load {
+    flex-shrink: 0;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .err {
+    margin: 0 0 0.3rem;
+    color: #fca5a5;
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
+  .sep {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.1rem 0 0.35rem;
   }
   .pw {
     display: flex;

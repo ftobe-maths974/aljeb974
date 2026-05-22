@@ -104,7 +104,7 @@ export const fr = {
     "3-7":  { title: "Slot du haut",       hint: "Tu peux aussi déposer une carte au-dessus, dans le numérateur des autres fractions." },
     "4-1":  { title: "Additionner",        hint: "Glisse deux nombres l'un sur l'autre : ils s'additionnent pour n'en faire qu'un seul." },
     "4-4":  { title: "Casser un nombre",   hint: "Double-touche un grand nombre pour le casser en petits morceaux (ses facteurs premiers)." },
-    "4-8":  { title: "Tout simplifier",    hint: "Combine les petits morceaux pour simplifier la fraction au maximum." },
+    "4-8":  { title: "Tout simplifier",    hint: "Combine les petits morceaux pour simplifier la fraction au maximum. Et maintenant, le « × » devient un point « · »." },
     "5-1":  { title: "Le moins fantôme",   hint: "Choisis une carte (elle devient verte), puis double-touche le −1 pour lui coller son signe contraire." },
   },
 } as const;

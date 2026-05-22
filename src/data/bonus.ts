@@ -15,6 +15,15 @@ export function isSandbox(chapter: number, level: number): boolean {
   return chapter === SANDBOX_CHAPTER && level === SANDBOX_LEVEL;
 }
 
+/** Pioche réutilisable du bac à sable (réutilisée aussi pour les équations
+ *  saisies au prompt). */
+export const sandboxPioche: Level["pioche"] = [
+  { numerator: [{ kind: "literal", sign: 1, value: 1 }] },
+  { numerator: [{ kind: "literal", sign: -1, value: 1 }] },
+  { numerator: [{ kind: "literal", sign: 1, value: 2 }] },
+  { numerator: [{ kind: "symbol", sign: 1, letter: "c" }] },
+];
+
 const sandboxLevel: Level = {
   // x + 6 + a  =  b + (-3) + 2/p
   lhs: [
@@ -31,12 +40,7 @@ const sandboxLevel: Level = {
     },
   ],
   // Pioche réutilisable (dropOnce off en sandbox) : de quoi tout tester.
-  pioche: [
-    { numerator: [{ kind: "literal", sign: 1, value: 1 }] },
-    { numerator: [{ kind: "literal", sign: -1, value: 1 }] },
-    { numerator: [{ kind: "literal", sign: 1, value: 2 }] },
-    { numerator: [{ kind: "symbol", sign: 1, letter: "c" }] },
-  ],
+  pioche: sandboxPioche,
   shots: 999,
 };
 

@@ -102,7 +102,7 @@ export const kreol77: Messages = {
     "3-7":  { title: "Slot an o",          hint: "Ou pé osi poz in kart an o, dann numératèr bann lot fraksion." },
     "4-1":  { title: "Azouté",             hint: "Glis dé nonm in si lot : zot i azout pou fé rienk in sèl." },
     "4-4":  { title: "Kas in nonm",        hint: "Doub-tous in gro nonm pou kas ali an pti morso (son bann faktèr premié)." },
-    "4-8":  { title: "Tout sinplifié",     hint: "Konbine bann pti morso pou sinplifié la fraksion o maximòm." },
+    "4-8":  { title: "Tout sinplifié",     hint: "Konbine bann pti morso pou sinplifié la fraksion o maximòm. É astèr, lo « × » i vien in pwin « · »." },
     "5-1":  { title: "Lo moin fantonm",    hint: "Soizi in kart (i vien vèr), apré doub-tous lo −1 pou kol ali son sign kontrèr." },
   },
 };

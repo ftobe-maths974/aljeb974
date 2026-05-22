@@ -39,6 +39,11 @@
     (game.caps.multPower || game.caps.negPower) &&
       fraction.numerator.length > 1,
   );
+
+  // Notation du produit : « × » au début, puis « · » (point de multiplication)
+  // dès que le superpouvoir multiplication est débloqué (niveau 4-8), et
+  // jusqu'à la fin.
+  const multSign = $derived(game.caps.multPower ? "·" : "×");
 </script>
 
 <div
@@ -56,7 +61,7 @@
   <div class="row numerator" data-region="numerator">
     {#each fraction.numerator as card (card.id)}
       {#if card !== fraction.numerator[0]}
-        <span class="mult-dot" aria-hidden="true">×</span>
+        <span class="mult-dot" aria-hidden="true">{multSign}</span>
       {/if}
       <Card
         {card}
@@ -71,7 +76,7 @@
     <div class="row denominator" data-region="denominator">
       {#each fraction.denominator! as card (card.id)}
         {#if card !== fraction.denominator![0]}
-          <span class="mult-dot" aria-hidden="true">×</span>
+          <span class="mult-dot" aria-hidden="true">{multSign}</span>
         {/if}
         <!-- Carte de dénominateur : draggable individuellement pour la
              simplification num/dén (e.g. p/p → 1). -->

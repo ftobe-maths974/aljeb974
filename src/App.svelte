@@ -8,7 +8,7 @@
   import { astuce } from "./state/astuce.svelte.ts";
   import { KEY_LEVEL_IDS, getKeyLevel } from "./data/key-levels.ts";
   import { bonusChapter } from "./data/bonus.ts";
-  import { t } from "./i18n/store.svelte.ts";
+  import { t, i18n } from "./i18n/store.svelte.ts";
 
   type Screen = "home" | "menu" | "play";
   let screen = $state<Screen>("home");
@@ -61,6 +61,9 @@
           <div class="cta">
             <button class="primary" onclick={() => startLevel(1, 1)}>{t().ui.playFirstLevel}</button>
             <button onclick={() => (screen = "menu")}>{t().ui.chooseLevel}</button>
+            <button class="sandbox-cta" onclick={() => startLevel(6, 1)}>
+              🧪 {i18n.locale === "en" ? "Sandbox" : "Manipuler"}
+            </button>
           </div>
         </section>
         <header>

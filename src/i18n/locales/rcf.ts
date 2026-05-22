@@ -101,7 +101,7 @@ export const rcf: Messages = {
     "3-7":  { title: "Slot an o",          hint: "Ou pé osi poz in kart an o, dann numératèr bann lot fraksyon." },
     "4-1":  { title: "Azouté",             hint: "Glis dé nonm in si lot : zot i azout pou fé rienk in sèl." },
     "4-4":  { title: "Kas in nonm",        hint: "Doub-tous in gro nonm pou kas ali an pti morso (son bann faktèr premié)." },
-    "4-8":  { title: "Tout sanplifyé",     hint: "Konbine bann pti morso pou sanplifyé la fraksyon o maximòm." },
+    "4-8":  { title: "Tout sanplifyé",     hint: "Konbine bann pti morso pou sanplifyé la fraksyon o maximòm. É astèr, lo « × » i vyin in pwin « · »." },
     "5-1":  { title: "Lo moins fantonm",   hint: "Shoizi in kart (i vyin vèr), apré doub-tous lo −1 pou kol ali son sign kontrèr." },
   },
 };

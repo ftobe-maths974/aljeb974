@@ -52,7 +52,7 @@ import {
   type RevealItem,
 } from "../lib/engine/index.ts";
 import levelsData from "../../migration/levels.json";
-import { bonusChapter, isSandbox } from "../data/bonus.ts";
+import { bonusChapter, isSandbox, SANDBOX_CHAPTER, SANDBOX_LEVEL } from "../data/bonus.ts";
 import { sandbox } from "./sandbox.svelte.ts";
 import { astuce } from "./astuce.svelte.ts";
 import { fx } from "./fx.svelte.ts";
@@ -146,6 +146,20 @@ class GameStore {
     }
     this.victoryReady = false;
     astuce.startForLevel(`${chapter}-${level}`);
+  }
+
+  /** Charge une équation personnalisée dans le bac à sable (depuis le prompt). */
+  loadSandbox(level: Parameters<typeof initialState>[0]) {
+    this.chapter = SANDBOX_CHAPTER;
+    this.level = SANDBOX_LEVEL;
+    this.loadCounter += 1;
+    this.state = initialState(level, `${SANDBOX_CHAPTER}-${SANDBOX_LEVEL}`);
+    if (this.victoryTimer) {
+      clearTimeout(this.victoryTimer);
+      this.victoryTimer = null;
+    }
+    this.victoryReady = false;
+    astuce.stop();
   }
 
   /**

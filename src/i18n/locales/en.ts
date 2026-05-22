@@ -99,7 +99,7 @@ export const en: Messages = {
     "3-7":  { title: "Top slot",      hint: "You can also drop a card above, into the numerator of other fractions." },
     "4-1":  { title: "Add numbers",   hint: "Drag two numbers onto each other: they add up into one." },
     "4-4":  { title: "Break a number",hint: "Double-tap a big number to break it into smaller pieces (prime factors)." },
-    "4-8":  { title: "Simplify all",  hint: "Combine the pieces to simplify the fraction as much as possible." },
+    "4-8":  { title: "Simplify all",  hint: "Combine the pieces to simplify the fraction as much as possible. And now, the “×” becomes a dot “·”." },
     "5-1":  { title: "Ghost minus",   hint: "Pick a card (it turns green), then double-tap the −1 to give it the opposite sign." },
   },
 };

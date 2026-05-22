@@ -102,7 +102,7 @@ export const kwz: Messages = {
     "3-7":  { title: "Slot an o",          hint: "Ou pé osi poz in kart an o, dann numératèr bann lot fraksyon." },
     "4-1":  { title: "Azouté",             hint: "Glis dé nonm in si lot : zot i azout pou fé ryink in sèl." },
     "4-4":  { title: "Kas in nonm",        hint: "Doub-tous in gro nonm pou kas ali an pti morso (son bann faktèr premyé)." },
-    "4-8":  { title: "Tout sinplifyé",     hint: "Konbine bann pti morso pou sinplifyé la fraksyon o maximòm." },
+    "4-8":  { title: "Tout sinplifyé",     hint: "Konbine bann pti morso pou sinplifyé la fraksyon o maximòm. É astèr, lo « × » i vyin in pwin « · »." },
     "5-1":  { title: "Lo mwin fantonm",    hint: "Swazi in kart (i vyin vèr), apré doub-tous lo −1 pou kol ali son sign kontrèr." },
   },
 };
