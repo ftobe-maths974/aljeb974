@@ -99,7 +99,8 @@
     gap: 0.75rem;
     max-width: min(90vw, 36rem);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    z-index: 60;
+    /* Au-dessus de la main d'astuce (👆 z-index 250) pour ne pas être masquée. */
+    z-index: 260;
     animation: intro-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   @keyframes intro-in {
