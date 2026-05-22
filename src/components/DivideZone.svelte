@@ -41,13 +41,13 @@
     transform: translate(-50%, 100%);
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.4rem 1rem;
+    gap: 0.7rem;
+    padding: 0.7rem 1.6rem;
     border-radius: 999px;
     border: 2px dashed rgba(255, 255, 255, 0.4);
     background: rgba(15, 23, 34, 0.85);
-    color: rgba(255, 255, 255, 0.78);
-    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1rem;
     pointer-events: none;
     z-index: 50;
     white-space: nowrap;
@@ -62,7 +62,7 @@
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
     font-weight: 900;
-    font-size: 1.5rem;
+    font-size: 1.9rem;
     line-height: 1;
   }
   .divide-zone.hovered {

@@ -340,14 +340,24 @@ function pickFractionTarget(
     }
     if (holeCardId && fractionId && side && region && divideZone && multiplyZone) break;
   }
-  // Fallback géométrique : Y au-dessus / en dessous des sides.
+  // Zone géométrique BORNÉE sous (÷) / au-dessus (×) de l'équation. Généreuse
+  // mais limitée : relâcher hors de cette bande (et hors des .side) ⇒ rien
+  // (pas de division/multiplication accidentelle).
   if (!divideZone && !multiplyZone && !side && !fractionId && !holeCardId && !region) {
-    const lhsRect = document.querySelector<HTMLElement>('[data-side="lhs"]')?.getBoundingClientRect();
-    const rhsRect = document.querySelector<HTMLElement>('[data-side="rhs"]')?.getBoundingClientRect();
-    const bottom = Math.max(lhsRect?.bottom ?? -Infinity, rhsRect?.bottom ?? -Infinity);
-    const top = Math.min(lhsRect?.top ?? Infinity, rhsRect?.top ?? Infinity);
-    if (bottom > -Infinity && y > bottom + 8) divideZone = true;
-    else if (top < Infinity && y < top - 8) multiplyZone = true;
+    const rects = (["lhs", "rhs"] as const)
+      .map((s) => document.querySelector<HTMLElement>(`[data-side="${s}"]`)?.getBoundingClientRect())
+      .filter((r): r is DOMRect => !!r);
+    if (rects.length) {
+      const ZONE_H = 140; // hauteur de la bande (px)
+      const X_MARGIN = 100; // débordement horizontal autorisé
+      const bottom = Math.max(...rects.map((r) => r.bottom));
+      const top = Math.min(...rects.map((r) => r.top));
+      const left = Math.min(...rects.map((r) => r.left)) - X_MARGIN;
+      const right = Math.max(...rects.map((r) => r.right)) + X_MARGIN;
+      const inX = x >= left && x <= right;
+      if (inX && y > bottom && y <= bottom + ZONE_H) divideZone = true;
+      else if (inX && y < top && y >= top - ZONE_H) multiplyZone = true;
+    }
   }
   if (!fractionId && !side && !holeCardId && !divideZone && !multiplyZone && !region) return null;
   return { fractionId, side, holeCardId, divideZone, multiplyZone, region };
