@@ -20,9 +20,11 @@ import {
   canMoveAcross,
   addFractions,
   addLiterals,
+  addTerms,
   applyNegOne,
   canAddFractions,
   canAddLiterals,
+  canAddTerms,
   canApplyNegOne,
   canDivideAll,
   canMultiplyAllNum,
@@ -443,6 +445,17 @@ class GameStore {
         ) {
           const targetFractionId = target.fractionId;
           this.applyState(addFractions(this.state, sourceFractionId, target.fractionId));
+          requestAnimationFrame(() =>
+            fx.spawnPuffOnFraction(targetFractionId, t().fx.addLiterals),
+          );
+          return true;
+        }
+        if (
+          this.caps.addTermsPower &&
+          canAddTerms(this.state, sourceFractionId, target.fractionId)
+        ) {
+          const targetFractionId = target.fractionId;
+          this.applyState(addTerms(this.state, sourceFractionId, target.fractionId));
           requestAnimationFrame(() =>
             fx.spawnPuffOnFraction(targetFractionId, t().fx.addLiterals),
           );

@@ -954,3 +954,96 @@ export function addFractions(
     return replaceAt(removed, newTargetIdx, newTarget);
   });
 }
+
+/* ─── 9.6. Addition de termes semblables sans dénominateur (addTermsPower) ──── */
+
+/**
+ * Décompose un terme SANS dénominateur en (coefficient numérique, partie
+ * littérale ordonnée sign-strippée). Renvoie null si le terme a un dénominateur
+ * ou contient un trou.
+ */
+function splitTerm(
+  frac: FractionInstance,
+): { coef: number; key: string; symbolic: Atom[] } | null {
+  if (frac.denominator) return null;
+  let coef = 1;
+  const symbolic: Atom[] = [];
+  for (const c of frac.numerator) {
+    const a = c.atom;
+    if (a.kind === "literal") {
+      coef *= a.sign * a.value;
+    } else if (a.kind === "unknown" || a.kind === "symbol") {
+      coef *= a.sign;
+      symbolic.push({ ...a, sign: 1 });
+    } else {
+      return null; // hole : pas additionnable
+    }
+  }
+  const key = symbolic
+    .map((a) => (a.kind === "unknown" ? "x" : (a as { letter: string }).letter))
+    .join(".");
+  return { coef, key, symbolic };
+}
+
+/**
+ * Drop d'un terme sur un autre, SANS dénominateur, dont les parties littérales
+ * sont RIGOUREUSEMENT identiques (mêmes atomes, même ordre) — ou deux nombres.
+ * Les coefficients s'ajoutent. Ex : 2x + 5x = 7x, 2 + 3 = 5, ab + ab = 2ab.
+ * Refus si les parties ne sont pas dans la même forme (ex : xy vs yx).
+ */
+export function canAddTerms(
+  state: GameState,
+  draggedFractionId: EntityId,
+  targetFractionId: EntityId,
+): boolean {
+  if (state.pending) return false;
+  if (draggedFractionId === targetFractionId) return false;
+  const dl = locateFraction(state, draggedFractionId);
+  const tl = locateFraction(state, targetFractionId);
+  if (!dl || !tl) return false;
+  if (dl.side !== tl.side || dl.side === "pioche") return false;
+  const ds = splitTerm(state[dl.side][dl.fractionIdx]!);
+  const ts = splitTerm(state[tl.side][tl.fractionIdx]!);
+  if (!ds || !ts) return false;
+  return ds.key === ts.key;
+}
+
+export function addTerms(
+  state: GameState,
+  draggedFractionId: EntityId,
+  targetFractionId: EntityId,
+): GameState {
+  ensureNotPending(state, "addTerms");
+  if (!canAddTerms(state, draggedFractionId, targetFractionId)) {
+    throw new Error("addTerms illégale");
+  }
+  const dl = locateFraction(state, draggedFractionId)!;
+  const tl = locateFraction(state, targetFractionId)!;
+  const tFrac = state[tl.side][tl.fractionIdx]!;
+  const ds = splitTerm(state[dl.side][dl.fractionIdx]!)!;
+  const ts = splitTerm(tFrac)!;
+  const sum = ds.coef + ts.coef;
+  const ids = makeIdSource(`at${state.shots + 1}_`);
+
+  let atoms: Atom[];
+  if (ts.symbolic.length === 0 || sum === 0) {
+    // partie numérique pure, ou somme nulle → un simple nombre
+    atoms = [fromLiteral(sum)];
+  } else if (sum === 1) {
+    atoms = ts.symbolic; // 1·(partie) → partie
+  } else if (sum === -1) {
+    atoms = ts.symbolic.map((a, i) => (i === 0 ? { ...a, sign: -1 as const } : a));
+  } else {
+    atoms = [fromLiteral(sum), ...ts.symbolic];
+  }
+  const newTarget: FractionInstance = {
+    id: tFrac.id,
+    numerator: atoms.map((a) => ({ id: ids.next(), atom: a })),
+  };
+  const next = { ...state };
+  return updateSide(next, dl.side, (fs) => {
+    const removed = removeAt(fs, dl.fractionIdx);
+    const newTargetIdx = dl.fractionIdx < tl.fractionIdx ? tl.fractionIdx - 1 : tl.fractionIdx;
+    return replaceAt(removed, newTargetIdx, newTarget);
+  });
+}

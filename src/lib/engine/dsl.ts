@@ -157,6 +157,8 @@ export interface Capabilities {
   addPower: boolean;
   /** Drop fraction sur fraction de même dénominateur = addition des numérateurs. */
   addFractionPower: boolean;
+  /** Drop terme sur terme semblable (sans dén., parties littérales identiques) = regroupement (2x+5x=7x). */
+  addTermsPower: boolean;
   /** Clic sur nombre > 3 = décomposition en facteurs premiers. */
   primeFactorPower: boolean;
   /** Clic sur carte sélectionnée puis appliquer `-1` ailleurs. */
@@ -183,6 +185,7 @@ export function capabilitiesFor(chapter: number, level: number): Capabilities {
     dropnumPower:     at(3, 7),
     addPower:         at(4, 1),
     addFractionPower: at(4, 1),
+    addTermsPower:    at(4, 1),
     primeFactorPower: at(4, 4),
     multPower:        at(4, 8),
     negPower:         at(5, 1),

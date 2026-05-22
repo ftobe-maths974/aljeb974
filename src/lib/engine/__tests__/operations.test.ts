@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   addFractions,
+  addTerms,
   canAddFractions,
+  canAddTerms,
   cancelOpposites,
   cancelPending,
   canCancelOpposites,
@@ -210,5 +212,30 @@ describe("addFractions", () => {
   it("refuse si les dénominateurs diffèrent", () => {
     const s = initialState(lvl({ lhs: ["3/p", "2/q"], shots: 9 }), "test");
     expect(canAddFractions(s, s.lhs[0]!.id, s.lhs[1]!.id)).toBe(false);
+  });
+});
+
+describe("addTerms", () => {
+  it("regroupe des termes semblables (2x + 5x = 7x)", () => {
+    const s = initialState(lvl({ lhs: ["2.x", "5.x", "1"], shots: 9 }), "test");
+    const dragged = s.lhs[0]!.id;
+    const target = s.lhs[1]!.id;
+    expect(canAddTerms(s, dragged, target)).toBe(true);
+    const s2 = addTerms(s, dragged, target);
+    expect(s2.lhs.length).toBe(2);
+    const r = s2.lhs[0]!;
+    expect(r.numerator).toHaveLength(2);
+    expect((r.numerator[0]!.atom as { value: number }).value).toBe(7);
+    expect(r.numerator[1]!.atom.kind).toBe("unknown");
+  });
+
+  it("refuse des parties littérales différentes (2x + 3t)", () => {
+    const s = initialState(lvl({ lhs: ["2.x", "3.t"], shots: 9 }), "test");
+    expect(canAddTerms(s, s.lhs[0]!.id, s.lhs[1]!.id)).toBe(false);
+  });
+
+  it("refuse une forme non identique (xt vs tx)", () => {
+    const s = initialState(lvl({ lhs: ["x.t", "t.x"], shots: 9 }), "test");
+    expect(canAddTerms(s, s.lhs[0]!.id, s.lhs[1]!.id)).toBe(false);
   });
 });
