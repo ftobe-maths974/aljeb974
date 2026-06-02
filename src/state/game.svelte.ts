@@ -71,6 +71,8 @@ import { sandbox } from "./sandbox.svelte.ts";
 import { astuce } from "./astuce.svelte.ts";
 import { fx } from "./fx.svelte.ts";
 import { t } from "../i18n/store.svelte.ts";
+// @ts-expect-error — paquet JS vendu (contrat de compétences partagé, sans types)
+import { makeAttempt, recordAttempt } from "../lib/competences/index.js";
 
 // ─── Lookup helper ──────────────────────────────────────────────────────────
 
@@ -226,6 +228,18 @@ class GameStore {
     // les drags l'éteignent dès leur démarrage, cf. drag.svelte.ts).
     astuce.stop();
     if (!wasSolved && isSolved(newState)) {
+      // Tentative unifiée : isoler l'inconnue en conservant l'égalité.
+      try {
+        recordAttempt(makeAttempt({
+          app: "aljeb",
+          activityId: `${this.chapter}-${this.level}`,
+          passed: true,
+          stars: stars(newState),
+          maxStars: 3,
+          measures: { moves: newState.shots },
+          competencies: ["equation.isoler", "equation.equilibre"],
+        }));
+      } catch (e) { console.warn("compétences:", e); }
       if (this.victoryTimer) clearTimeout(this.victoryTimer);
       this.victoryReady = false;
       if (newState.rhs.length === 0) {
